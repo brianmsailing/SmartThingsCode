@@ -1,6 +1,8 @@
 /**
- *  Keenect 2.0
-
+ *  
+ *
+ *  V2.0 Keenect with proportional control of keen vents
+ *
  *  Copyright 2015 Mike Maxwell
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -127,7 +129,7 @@ def main(){
                 		,type			: "capability.switch"
                         ,submitOnChange	: false
             		)
-                      		input(
+                        input(
             			name			: "Heatind"
                 		,title			: "Optional Virtual Switch to indicate Heat on/off"
                 		,multiple		: false
@@ -135,7 +137,7 @@ def main(){
                 		,type			: "capability.switch"
                         ,submitOnChange	: false
             		)
-                      		input(
+                        input(
             			name			: "Fanind"
                 		,title			: "Optional Virtual Switch to indicate Fan on/off"
                 		,multiple		: false
@@ -143,7 +145,7 @@ def main(){
                 		,type			: "capability.switch"
                         ,submitOnChange	: false
             		)
-                                          		input(
+                        input(
             			name			: "ReturnVents"
                 		,title			: "Optional Return air vents to open during heating"
                 		,multiple		: true
@@ -152,7 +154,7 @@ def main(){
                         ,submitOnChange	: false
             		)
                     
-                                                 		input(
+                        input(
             			name			: "outputreductionind"
                 		,title			: "Optional Virtual Switch to indicate OutputReduction on/off"
                 		,multiple		: true
@@ -161,7 +163,7 @@ def main(){
                         ,submitOnChange	: false
             		)
         
-                         input(
+                    input(
             		name			: "nightmode"
                 	,title			: "Optional input Virtual Switch to indicate day or night for return vents on/off"
                 	,multiple		: false
