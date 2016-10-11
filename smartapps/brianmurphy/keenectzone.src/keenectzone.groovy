@@ -548,7 +548,7 @@ def zoneEvaluate(params){
           		  VoLocal=40
                    logger(20,"info","QR active <=40")}
                      }
-                     else {VoLocal=Math.round(((zoneHSPLocal - zoneTempLocal)+(0.75))*40)
+                     else {VoLocal=Math.round(((zoneHSPLocal - zoneTempLocal)+(0.75))*50)
                      }
                  
                    if (VoLocal>100){
@@ -567,7 +567,7 @@ def zoneEvaluate(params){
                  
                  outred = true
                  VoLocal=VoLocal*0.30
-                  log.info"output reduction for this zone needed ${VoLocal}"
+                  log.info"output after reduction for this zone ${VoLocal}"
                   }
                   }
                    	
