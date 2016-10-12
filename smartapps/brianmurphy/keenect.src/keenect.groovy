@@ -1,6 +1,6 @@
 /**
  *  
- *
+ *  V2.0.1 Change reducted output flag to match seting of 30%
  *  V2.0 Keenect with proportional control of keen vents
  *
  *  Copyright 2015 Mike Maxwell
@@ -622,7 +622,7 @@ log.info "PARENT Ouput Reduction Off"
 
 def ChildReduceOutput(){
 log.info "PARENT Output Reduction On"
-outputreductionind.setLevel(60)
+outputreductionind.setLevel(30)
   runIn (125, ChildNormalOutput)
         state.ouputflag = false
    childApps.each {child ->

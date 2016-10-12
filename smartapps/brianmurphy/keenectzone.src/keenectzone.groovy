@@ -1,6 +1,8 @@
  /*  
  *
+ *V2.0.1 Fix condition where zone disabled but toggling between minimum opening and output reduction state resulting in opening and closing of vents
  *V2.0 KeenectZone with proportional control of keen vents
+ *
  *
  *
  *
@@ -38,7 +40,7 @@ def installed() {
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.0"
+	state.vChild = "2.0.1"
     unsubscribe()
 	initialize()
 }
@@ -532,10 +534,11 @@ def zoneEvaluate(params){
             
        		if (zoneTempLocal >= zoneHSPLocal){
             	state.lastVO = minVoLocal
-           		slResult = setVents(minVoLocal)
+           		
                 if (state.outputreduction){
                 slResult = setVents(0)
-                }
+                } else{slResult = setVents(minVoLocal)}
+                
              	logger(10,"info","CHILD Zone temp is ${tempStr(zoneTempLocal)}, heating setpoint of ${tempStr(zoneHSPLocal)} is met${slResult}")
 				runningLocal = false
           	} else {
