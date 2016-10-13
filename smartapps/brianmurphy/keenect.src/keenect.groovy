@@ -47,7 +47,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.0.0"
+	state.vParent = "2.0.1"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -91,6 +91,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
+state.vParent = "2.0.1"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"

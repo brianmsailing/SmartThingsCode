@@ -46,7 +46,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vChild = "2.0"
+	state.vChild = "2.0.1"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
