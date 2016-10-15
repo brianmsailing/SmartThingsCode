@@ -1,5 +1,5 @@
  /*  
- *
+ *V2.0.2 Fix isssue with fan after heat vent position
  *V2.0.1 Fix condition where zone disabled but toggling between minimum opening and output reduction state resulting in opening and closing of vents
  *V2.0 KeenectZone with proportional control of keen vents
  *
@@ -40,13 +40,13 @@ def installed() {
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.0.1"
+	state.vChild = "2.0.2"
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	state.vChild = "2.0.1"
+	state.vChild = "2.0.2"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
@@ -321,6 +321,7 @@ def zoneEvaluate(params){
 	def zoneDisabledLocal = fetchZoneControlState()
     def runningLocal
     
+    
     //always fetch these since the zone ownes them
     def zoneTempLocal = tempSensors.currentValue("temperature").toFloat()
     def coolOffsetLocal 
@@ -537,8 +538,9 @@ def zoneEvaluate(params){
            		
                 if (state.outputreduction){
                 slResult = setVents(0)
-                } else{slResult = setVents(minVoLocal)}
-                
+                VoLocal=0
+                } else{slResult = setVents(minVoLocal)
+                VoLocal=minVoLocal}
              	logger(10,"info","CHILD Zone temp is ${tempStr(zoneTempLocal)}, heating setpoint of ${tempStr(zoneHSPLocal)} is met${slResult}")
 				runningLocal = false
           	} else {
@@ -551,7 +553,7 @@ def zoneEvaluate(params){
           		  VoLocal=40
                    logger(20,"info","QR active <=40")}
                      }
-                     else {VoLocal=Math.round(((zoneHSPLocal - zoneTempLocal)+(0.75))*50)
+                     else {VoLocal=Math.round(((zoneHSPLocal - zoneTempLocal)+(0.75))*55)
                      }
                  
                    if (VoLocal>100){
@@ -674,15 +676,16 @@ def zoneEvaluate(params){
             }   
             
         }else if (mainStateLocal == "fan only"){
-        
+        logger(10,"info","volocal entering fan only ${VoLocal}")
              if (state.acactive != true) {
              VoLocal = 100
-            logger(10,"info"," fan on open vents to 100, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}")
+            logger(10,"info"," fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             }
             if (state.acactive == true) {
-                if (VoLocal <40){
-                VoLocal = 40}
-            logger(10,"info","fan on after heat or AC nothing to do, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}")
+                if (VoLocal <25){
+                VoLocal = 25}
+                
+            logger(10,"info","fan on after heat or AC, open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             } 
         setVents(VoLocal)
         } else {
