@@ -1,4 +1,5 @@
- /*  
+ /*
+ *V2.1.0 Added zone fan only vent level setting
  *V2.0.2 Fix isssue with fan after heat vent position
  *V2.0.1 Fix condition where zone disabled but toggling between minimum opening and output reduction state resulting in opening and closing of vents
  *V2.0 KeenectZone with proportional control of keen vents
@@ -40,13 +41,13 @@ def installed() {
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.0.2"
+	state.vChild = "2.1.0"
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	state.vChild = "2.0.2"
+	state.vChild = "2.1.0"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
@@ -231,7 +232,17 @@ def advanced(){
                 	,type			: "bool"
                     ,submitOnChange	: true
                     ,defaultValue	: false
-            	)          
+            	) 
+                  		input(
+            		name			: "FanVoC"
+                	,title			: "Fan Only Vent Level"
+                	,multiple       : false
+                    ,required       : false
+                    ,type           : "enum"
+                    ,options        : FANoptions()
+                    ,defaultValue : "100"
+                    ,submitOnChange : true
+            	)
             	input(
             		name			: "ventCloseWait"
                     ,title			: getTitle("ventCloseWait")
@@ -334,6 +345,7 @@ def zoneEvaluate(params){
     def maxVoLocal = settings.maxVo.toInteger()
      def minVoCLocal = settings.minVoC.toInteger() 
     def maxVoCLocal = settings.maxVoC.toInteger()
+    def fanVoLocal = settings.FanVoC.toInteger()
     
     
     def VoLocal = state.zoneVoLocal
@@ -678,7 +690,7 @@ def zoneEvaluate(params){
         }else if (mainStateLocal == "fan only"){
         logger(10,"info","volocal entering fan only ${VoLocal}")
              if (state.acactive != true) {
-             VoLocal = 100
+             VoLocal = fanVoLocal
             logger(10,"info"," fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             }
             if (state.acactive == true) {
@@ -935,12 +947,7 @@ def getTitle(name){
         case "zoneControlSwitchSummary" :
         	title = settings.zoneControlSwitch ? "Zone control switch: selected" : "Zone control switch: not selected"
         	break            
-              /*case "zoneindicateoffsetSwitch" :
-        	title = settings.zoneindicateoffsetSwitch ? "Master zone offset switch: selected" : "Master zone offset switch: not selected"
-        	break  
-              case "zoneneedoffsetSwitch" :
-        	title = settings.zoneneedoffsetSwitch ? "Zone request offset switch: selected" : "Zone request offset switch: not selected"
-        	break */ 
+     
             
             
         case "logLevelSummary" :
@@ -992,6 +999,16 @@ def maxVoptions(){
 
 def getLogLevels(){
     return [["0":"None"],["10":"Lite"],["20":"Moderate"],["30":"Detailed"],["40":"Super nerdy"]]
+}
+
+def FANoptions(){
+	    def opts = []
+    def start = minVoC.toInteger() + 5
+    start.step 95, 5, {
+        opts.push(["${it}":"${it}%"])
+    }
+    opts.push(["100":"Fully open"])
+    return opts
 }
 
 def getLogLevel(val){
