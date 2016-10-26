@@ -1,4 +1,5 @@
  /*
+ *V2.1.1 Changed min/max vent control thresholds
  *V2.1.0 Added zone fan only vent level setting
  *V2.0.2 Fix isssue with fan after heat vent position
  *V2.0.1 Fix condition where zone disabled but toggling between minimum opening and output reduction state resulting in opening and closing of vents
@@ -41,13 +42,13 @@ def installed() {
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.1.0"
+	state.vChild = "2.1.1"
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	state.vChild = "2.1.0"
+	state.vChild = "2.1.1"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
@@ -694,8 +695,8 @@ def zoneEvaluate(params){
             logger(10,"info"," fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             }
             if (state.acactive == true) {
-                if (VoLocal <25){
-                VoLocal = 25}
+                if (VoLocal <30){
+                VoLocal = 30}
                 
             logger(10,"info","fan on after heat or AC, open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             } 
@@ -891,7 +892,7 @@ def setVents(newVo){
         if (newVo != crntVo){
         	def lB = crntVo - 5
             def uB = crntVo + 5
-        	if (newVo == 100 && crntVo < 97){
+        	if (newVo == 100 && crntVo < 92){
             	//logger(10,"info","newVo == 100 && crntVo < 90: ${newVo == 100 && crntVo < 90}")
             	changeMe = true
             } else if ((newVo < lB || newVo > uB) && newVo != 100){
