@@ -1,5 +1,5 @@
 /**
- *  
+ *  V2.0.2 Fixed namespace error
  *  V2.0.1 Change reducted output flag to match seting of 30%
  *  V2.0 Keenect with proportional control of keen vents
  *
@@ -101,7 +101,7 @@ state.vParent = "2.0.1"
         ){	
              if (installed){
         		section(){
-        			app(name: "childZones", appName: "keenectZone", namespace: "MikeMaxwell", description: "Create New Vent Zone...", multiple: true)	
+        			app(name: "childZones", appName: "keenectZone", namespace: "BrianMurphy", description: "Create New Vent Zone...", multiple: true)	
                 }
              }
 		     section("Configuration"){
