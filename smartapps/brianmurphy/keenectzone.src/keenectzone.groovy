@@ -1,4 +1,5 @@
  /*
+ *V2.2.0 New Feature in fan only mode, zone will evaluate local temperature and compare against setpoint and open vents accordingly to adjust zone temp using fan.
  *V2.1.1 Changed min/max vent control thresholds
  *V2.1.0 Added zone fan only vent level setting
  *V2.0.2 Fix isssue with fan after heat vent position
@@ -244,6 +245,16 @@ def advanced(){
                     ,defaultValue : "100"
                     ,submitOnChange : true
             	)
+                             		input(
+            		name			: "FanAHC"
+                	,title			: "Fan after heat Vent Level"
+                	,multiple       : false
+                    ,required       : false
+                    ,type           : "enum"
+                    ,options        : FANoptions()
+                    ,defaultValue : "100"
+                    ,submitOnChange : true
+            	)
             	input(
             		name			: "ventCloseWait"
                     ,title			: getTitle("ventCloseWait")
@@ -347,6 +358,7 @@ def zoneEvaluate(params){
      def minVoCLocal = settings.minVoC.toInteger() 
     def maxVoCLocal = settings.maxVoC.toInteger()
     def fanVoLocal = settings.FanVoC.toInteger()
+    def fanAHLocal = settings.FanAHC.toInteger()
     
     
     def VoLocal = state.zoneVoLocal
@@ -690,14 +702,27 @@ def zoneEvaluate(params){
             
         }else if (mainStateLocal == "fan only"){
         logger(10,"info","volocal entering fan only ${VoLocal}")
-             if (state.acactive != true) {
-             VoLocal = fanVoLocal
-            logger(10,"info"," fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
+             if (state.acactive == false) {
+            // log.info "${state.mainMode}"
+             if (state.mainMode == "heat"){
+             //log.info "heat"
+             VoLocal=Math.round(((zoneTempLocal - zoneHSPLocal)+(0.75))*55)
+             }
+             if (state.mainMode == "cool"){
+             VoLocal=Math.round(((zoneCSPLocal - zoneTempLocal)+0.2)*150)
+             }
+            // VoLocal = fanVoLocal
+            logger(10,"info","fan only fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             }
+            
+            
+            
             if (state.acactive == true) {
-                if (VoLocal <30){
-                VoLocal = 30}
-                
+               // if (VoLocal <30){
+               // VoLocal = 30}
+               if (VoLocal < fanAHLocal){
+               VoLocal = fanAHLocal
+                   }
             logger(10,"info","fan on after heat or AC, open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             } 
         setVents(VoLocal)
@@ -1004,7 +1029,7 @@ def getLogLevels(){
 
 def FANoptions(){
 	    def opts = []
-    def start = minVoC.toInteger() + 5
+    def start = minVo.toInteger()
     start.step 95, 5, {
         opts.push(["${it}":"${it}%"])
     }
