@@ -1,4 +1,5 @@
 /**
+*	V2.0.3 Fixed Reporting error by disabling reporting
  *  V2.0.2 Fixed namespace error
  *  V2.0.1 Change reducted output flag to match seting of 30%
  *  V2.0 Keenect with proportional control of keen vents
@@ -195,13 +196,13 @@ state.vParent = "2.0.1"
 						,state			: null
 					)
                 }   
-          		section("Reporting"){
+          		/*section("Reporting"){
          			href( "reporting"
 						,title		: "Available reports..."
 						,description: ""
 						,state		: null
 					)                
-                }
+                }*/
                 def dev  = ""
                 if (state.etf) dev = "\n(development instance)"
             	section (getVersionInfo() + dev) { }    
@@ -344,7 +345,7 @@ def getReport(rptName){
     if (rptName == "Configuration"){
     	standardReport = true
     	cMethod = "getZoneConfig"
-        reports = "Main system:\n\tstate: ${state.mainState}\n\tmode: ${state.mainMode}\n\tcurrent temp: ${tempStr(t)}${cspStr}\n\theating set point: ${tempStr(state.mainHSP)}\n\n"
+     //   reports = "Main system:\n\tstate: ${state.mainState}\n\tmode: ${state.mainMode}\n\tcurrent temp: ${tempStr(t)}${cspStr}\n\theating set point: ${tempStr(state.mainHSP)}\n\n"
     }  
     if (rptName == "Last results"){
     	standardReport = true
