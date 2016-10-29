@@ -39,17 +39,23 @@ preferences {
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
+settings.minVo = 0
+settings.maxVo = 100
+settings.minVoC = 0
+settings.maxVoC = 100
+settings.FanVoC = 100
+settings.FanAHC = 100
 }
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.1.1"
+	state.vChild = "2.2.0"
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	state.vChild = "2.1.1"
+	state.vChild = "2.2.0"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
