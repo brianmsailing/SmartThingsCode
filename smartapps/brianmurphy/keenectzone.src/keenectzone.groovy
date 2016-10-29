@@ -717,6 +717,10 @@ def zoneEvaluate(params){
              if (state.mainMode == "cool"){
              VoLocal=Math.round(((zoneCSPLocal - zoneTempLocal)+0.2)*150)
              }
+                    if (VoLocal>100){
+           					 VoLocal=100}
+                         if (VoLocal< 0){
+          		 			 VoLocal = 0}
             // VoLocal = fanVoLocal
             logger(10,"info","fan only fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             }
