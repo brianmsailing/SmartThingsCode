@@ -50,13 +50,13 @@ settings.FanAHC = 100
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.2.0"
+	state.vChild = "2.2.1"
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	state.vChild = "2.2.0"
+	state.vChild = "2.2.1"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
