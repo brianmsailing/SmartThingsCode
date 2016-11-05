@@ -78,6 +78,14 @@ preferences {	page(name: "selectThermostats", title: "Thermostats", install: fal
                 		,type			: "capability.temperatureMeasurement"
                         ,submitOnChange	: false
             		) 
+                          input(
+            			name			: "TempSpan"
+                		,title			: "Temp Span Output to Virtual Switch"
+                		,multiple		: true
+                		,required		: false
+                		,type			: "capability.switchLevel"
+                        ,submitOnChange	: false
+            		)
                  
                	input "starttime", "time", title: "Start time", required: true
         input "endtime", "time", title: "End time", required: true
@@ -193,24 +201,30 @@ def    tempSensor3 = tempSensor3.currentValue("temperature").toFloat()
 def    tempSensor4 = tempSensor4.currentValue("temperature").toFloat()
 def    tempSensor5 = tempSensor5.currentValue("temperature").toFloat()
 def tempaverage = 0.0
-tempaverage = ((tempSensor1 + tempSensor2 + tempSensor3 + tempSensor4 + tempSensor5)/5)
-log.debug "temp sensor 1 ${tempSensor1-tempaverage}"
-log.debug "temp sensor 2 ${tempSensor2-tempaverage}"
-log.debug "temp sensor 3 ${tempSensor3-tempaverage}"
-log.debug "temp sensor 4 ${tempSensor4-tempaverage}"
-log.debug "temp sensor 5 ${tempSensor5-tempaverage}"
+//log.debug "temp sensor 1 ${tempSensor1}"
+//log.debug "temp sensor 2 ${tempSensor2}"
+//log.debug "temp sensor 3 ${tempSensor3}"
+//log.debug "temp sensor 4 ${tempSensor4}"
+//log.debug "temp sensor 5 ${tempSensor5}"
+def temp = [tempSensor1,tempSensor2,tempSensor3,tempSensor4,tempSensor5]
+def max = temp.max()
+def min = temp.min()
+TempSpan.setLevel(max-min)
+log.info "Temp Span ${(max-min).round(3)}, max ${max}, min${min}"
 //log.debug "tempaverage ${tempaverage}"
 if (state.on == true){
 if (mainMode == "heat"){
-if ((tempSensor1 > tempaverage+2) ||(tempSensor2 > tempaverage+2) ||(tempSensor3 > tempaverage+2) ||(tempSensor4 > tempaverage+2) ||(tempSensor5 > tempaverage+2)||(tempSensor1 < tempaverage-2) ||(tempSensor2 < tempaverage-2) ||(tempSensor3 < tempaverage-2) ||(tempSensor4 < tempaverage-2) ||(tempSensor5 < tempaverage-2)){
-log.debug "Zone temp >2 || <2 from average auto fan on"
+
+if (min+3.1< mainHSP || max-min >3.1){
+
+log.debug "Zone temp min ${min} < 3.1 from main heat set point ${mainHSP} or temp span ${(max-min).round(3)} >3.1 fan on"
 if (state.fanon == false){
 setClimateon()
 }
 if (state.fanon == true){
 log.debug "nothing to do fan on"
 }
-}else {log.debug "No temp >2 || <2 from average auto fan off"
+}else {log.debug "Zone temp min ${min} > 3.1 from main heat set point ${mainHSP} or temp span ${(max-min).round(3)} <3.1 fan off"
 if (state.fanon == true){
 setClimateoff()
 }
