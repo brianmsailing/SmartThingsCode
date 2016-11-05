@@ -1,4 +1,5 @@
  /*
+ *V2.2.1 Added logc for child if parent is AC
  *V2.2.0 New Feature in fan only mode, zone will evaluate local temperature and compare against setpoint and open vents accordingly to adjust zone temp using fan.
  *V2.1.1 Changed min/max vent control thresholds
  *V2.1.0 Added zone fan only vent level setting
@@ -361,8 +362,10 @@ def zoneEvaluate(params){
     
     def minVoLocal = settings.minVo.toInteger() 
     def maxVoLocal = settings.maxVo.toInteger()
+     if (parent.isAC()){
      def minVoCLocal = settings.minVoC.toInteger() 
     def maxVoCLocal = settings.maxVoC.toInteger()
+    }
     def fanVoLocal = settings.FanVoC.toInteger()
     def fanAHLocal = settings.FanAHC.toInteger()
     
