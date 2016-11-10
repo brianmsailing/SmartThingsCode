@@ -1,5 +1,7 @@
 /**
-*	V2.0.3 Fixed Reporting error by disabling reporting
+ *  V2.0.5 Fix install issue fan set to null
+ *  V2.0.4 Fix night mode return vent opening
+ *	V2.0.3 Fixed Reporting error by disabling reporting
  *  V2.0.2 Fixed namespace error
  *  V2.0.1 Change reducted output flag to match seting of 30%
  *  V2.0 Keenect with proportional control of keen vents
@@ -48,7 +50,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.0.3"
+	state.vParent = "2.0.5"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -92,7 +94,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
-state.vParent = "2.0.3"
+state.vParent = "2.0.5"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"
@@ -485,7 +487,9 @@ def checkNotify(evt){
     if(mainState == "fan only"){
     Fanind.on()
         if(state.cool == false){
+ if(state.night == false){
        ReturnVents.setLevel(100)
+        }
        }
       
     }

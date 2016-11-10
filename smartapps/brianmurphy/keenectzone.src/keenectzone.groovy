@@ -1,4 +1,5 @@
  /*
+ *V2.3.0 Fix install issue fan set to null
  *V2.2.1 Added logc for child if parent is AC
  *V2.2.0 New Feature in fan only mode, zone will evaluate local temperature and compare against setpoint and open vents accordingly to adjust zone temp using fan.
  *V2.1.1 Changed min/max vent control thresholds
@@ -44,19 +45,19 @@ settings.minVo = 0
 settings.maxVo = 100
 settings.minVoC = 0
 settings.maxVoC = 100
-settings.FanVoC = 100
+//settings.FanVoC = 100
 settings.FanAHC = 100
 }
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.2.1"
+	state.vChild = "2.3.0"
     unsubscribe()
 	initialize()
 }
 
 def initialize() {
-	state.vChild = "2.2.1"
+	state.vChild = "2.3.0"
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
@@ -115,6 +116,7 @@ def main(){
                 	,required		: true
                 	,type			: "enum"
                     ,options		: minVoptions()
+                    ,defaultValue	: "0"
                     ,submitOnChange	: true
             	) 
                 if (minVo){
@@ -147,6 +149,7 @@ def main(){
                         ,required       : false
                         ,type           : "enum"
                         ,options        : minVoptions()
+                        ,defaultValue	: "0"
                         ,submitOnChange : true
                     ) 
                     if (minVoC) {
@@ -157,10 +160,20 @@ def main(){
                             ,required       : false
                             ,type           : "enum"
                             ,options        : maxVCoptions()
-                            //,defaultValue : "100"
+                            ,defaultValue : "100"
                             ,submitOnChange : true
                         ) 
                     }
+                                   		input(
+            		name			: "FanAHC"
+                	,title			: "Fan after heat Vent Level"
+                	,multiple       : false
+                    ,required       : false
+                    ,type           : "enum"
+                    ,options        : FANoptions()
+                    ,defaultValue : "100"
+                    ,submitOnChange : true
+            	)
                 }
                 if (zoneControlType == "offset"){
 					input(
@@ -242,7 +255,7 @@ def advanced(){
                     ,submitOnChange	: true
                     ,defaultValue	: false
             	) 
-                  		input(
+                  	/*	input(
             		name			: "FanVoC"
                 	,title			: "Fan Only Vent Level"
                 	,multiple       : false
@@ -261,7 +274,7 @@ def advanced(){
                     ,options        : FANoptions()
                     ,defaultValue : "100"
                     ,submitOnChange : true
-            	)
+            	)*/
             	input(
             		name			: "ventCloseWait"
                     ,title			: getTitle("ventCloseWait")
@@ -366,7 +379,7 @@ def zoneEvaluate(params){
      def minVoCLocal = settings.minVoC.toInteger() 
     def maxVoCLocal = settings.maxVoC.toInteger()
     }
-    def fanVoLocal = settings.FanVoC.toInteger()
+   // def fanVoLocal = settings.FanVoC.toInteger()
     def fanAHLocal = settings.FanAHC.toInteger()
     
     
@@ -525,7 +538,6 @@ def zoneEvaluate(params){
     }    
     
     //always check for main quick  AggressiveTempVentCurveActive
-   // use this area to boost tegan and ethan heat multiplier at night mode
    
    def tempBool = false
    state.AggressiveTempVentCurveActive = false
@@ -599,8 +611,9 @@ def zoneEvaluate(params){
 
                  if (state.outputreduction){
                  if (state.zoneneedofset){
-                 
-               logger(30,"info","this zone < than 1.5 degree from setpoint output not reduced ${VoLocal}")
+                 log.info"output prior to multiplication for this zone ${VoLocal}"
+                                  VoLocal=100
+               logger(30,"info","this zone < than 1.5 degree from setpoint output multiplied ${VoLocal}")
                   }else {
                   log.info"output prior to reduction for this zone ${VoLocal}"
                  
@@ -1042,7 +1055,7 @@ def getLogLevels(){
 
 def FANoptions(){
 	    def opts = []
-    def start = minVo.toInteger()
+    def start = 0
     start.step 95, 5, {
         opts.push(["${it}":"${it}%"])
     }
