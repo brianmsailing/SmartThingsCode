@@ -1,4 +1,5 @@
  /*
+ *V2.3.1 Added aditional logic for reduce output in fan only mode
  *V2.3.0 Fix install issue fan set to null
  *V2.2.1 Added logc for child if parent is AC
  *V2.2.0 New Feature in fan only mode, zone will evaluate local temperature and compare against setpoint and open vents accordingly to adjust zone temp using fan.
@@ -45,8 +46,10 @@ settings.minVo = 0
 settings.maxVo = 100
 settings.minVoC = 0
 settings.maxVoC = 100
-//settings.FanVoC = 100
+settings.FanVoC = 100
 settings.FanAHC = 100
+state?.integrator= 0 
+state.acactive = false
 }
 
 def updated() {
@@ -54,10 +57,12 @@ def updated() {
 	state.vChild = "2.3.0"
     unsubscribe()
 	initialize()
+    
 }
 
 def initialize() {
 	state.vChild = "2.3.0"
+   // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
@@ -353,7 +358,7 @@ def zoneEvaluate(params){
     def msg = params.msg
     def data = params.data
     //main states
-    
+      
     def mainStateLocal = state.mainState ?: ""
     def mainModeLocal = state.mainMode ?: ""
 	def mainHSPLocal = state.mainHSP  ?: 0
@@ -437,32 +442,14 @@ def zoneEvaluate(params){
                     //system shut down
                     } else if (!data.mainOn && !zoneDisabledLocal){
                     	runningLocal = false
-                        def asp = state.activeSetPoint
-                        def d
+                       def asp = state.activeSetPoint
                         if (zoneTempLocal != null && asp != null){
-                            d = (zoneTempLocal - asp).toFloat()
-                            d = d.round(1)
+                            state?.zoneTempLocal=zoneTempLocal
                         }
-                         state.integrator=0 // temp remove later
-                    	log.info "integrator ${d}"
-                       
-                        state?.integrator = (state.integrator + (d))
-                        if (state.integrator >= 4) {
-                        state.integrator =4
-                        logger(20,"info", "state.integrator truncated to 4")
-                        }
-                         if (state.integrator <= -4) {
-                        state.integrator =-4
-                        logger(20,"info", "state.integrator truncated to -4")
-                        }
+                         
+                        runIn(60*3, integrator)
+                        logger(10,"info","Main HVAC has shut down state end report available in 3 minutes.")                        
                         
-                        log.info "state.integrator ${state.integrator}"
-                        if (state.AggressiveTempVentCurveActive) {
-                        state?.integrator = 0
-                        log.info "state.integrator QR ${state.integrator}"}
-                        state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")}%"        
-                        logger(10,"info","Main HVAC has shut down.")                        
-                        state.acactive = false
 						//check zone vent close options from zone
                     	if (zoneCloseOption >= 0){
                         	 closeWithOptions(zoneCloseOption)
@@ -503,14 +490,13 @@ def zoneEvaluate(params){
                 //shut it down with options
                 } else {
                 	if (mainOnLocal){
-                  		def asp = state.activeSetPoint
-                        def d
-                        if (zoneTempLocal != null && asp != null){
-                            d = (zoneTempLocal - asp).toFloat()
-                            d = d.round(1)
+                  		if (zoneTempLocal != null && asp != null){
+                            state?.zoneTempLocal=zoneTempLocal
                         }
-                        state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")}%"                    
-						runningLocal = false
+                         
+                        runIn(60*3, integrator)
+                        logger(10,"info","Main HVAC has shut down state end report available in 3 minutes.")    
+                        runningLocal = false
     				} 
                     //check zone vent close options from zone
                     if (zoneCloseOption == -2){
@@ -562,7 +548,7 @@ def zoneEvaluate(params){
   
     if (evaluateVents){
     def outred = false  
-    state.integrator=0 // temp
+
     	def slResult = ""
        	if (mainStateLocal == "heat"){
         state.acactive = true
@@ -669,19 +655,16 @@ def zoneEvaluate(params){
              	logger(10,"info", "CHILD zone temp is ${tempStr(zoneTempLocal)}, cooling setpoint of ${tempStr(zoneCSPLocal)} is met${slResult}")
 				runningLocal = false
           	} else {
-           			 
-                     if (state.AggressiveTempVentCurveActive) 
-                     {VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal)+ 0.2 )*300)
+                    if (state.AggressiveTempVentCurveActive) {
+                     VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal)+ 0.2 )*300)
                        logger(30,"info","MM >3 QR Vent request level ${VoLocal}")
                      if (VoLocal<=40){
           		  VoLocal=40
-                    logger(30,"info","QR active <=40")}
                      }
-                                         // else {VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal) - (state.integrator))*140)
 
 
-                     else {VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal)+0.2)*150)
-                     logger(30,"info","SM >3 Saved state.integrator/2 ${state.integrator}")
+                    } else {
+                     VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal)+0.2)*150)
                      }
                    
                  
@@ -756,7 +739,7 @@ def zoneEvaluate(params){
             logger(10,"info","Nothing to do, main HVAC is not running, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}")
        	}
                                                                 //  log.info "output reduction ${state.outputreduction} zone need ${state.zoneneedofset}"
-
+if (state.acactive == true){
       if (state.zoneneedofset == false){
 parent.manageoutputreduction(false)
  log.info "CHILD Clearing System Reduced Ouput"
@@ -766,7 +749,12 @@ parent.manageoutputreduction(false)
           parent.manageoutputreduction(true)
  log.info "CHILD Requesting System Reduced Ouput"
              }      
-        
+        }
+        if (state.acactive == false){
+        parent.manageoutputreduction(false)
+         log.info "CHILD Clearing System Reduced Ouput fan only"
+
+        }
         
     }
     //write state
@@ -954,9 +942,12 @@ def setVents(newVo){
         if (changeMe || isOff){
         	changeRequired = true
         	vent.setLevel(newVo)
+            state?.ventcheck=newVo
+            runIn(60*1, ventcheck)
         }
-        logger(30,"info","setVents- [${vent.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
+        log.info("setVents- [${vent.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
     }
+    
     def mqText = ""
     if (state.mainQuick && settings.AggressiveTempVentCurve && newVo == 100){
     	mqText = ", quick recovery active"
@@ -965,6 +956,11 @@ def setVents(newVo){
     else result = ", vents at ${newVo}%${mqText}"
  	return result
     logger(40,"debug","setVents:exit- ")
+}
+
+def ventcheck(){
+def newVo=state.ventcheck
+setVents(newVo)
 }
 
 def delayClose(){
@@ -1153,3 +1149,35 @@ def getZoneTemp(){
 	return state.zoneTemp
 }
 
+def integrator(){
+log.info "Starting Generate Integrator"
+if (state.acactive == true){
+log.info "Last run state.integrator ${state.integrator}"
+ def zoneTempLocal = state.zoneTempLocal
+ def asp = state.activeSetPoint
+ def d
+  d = (zoneTempLocal - asp).toFloat()
+ d = d.round(1)
+                    	log.info "zonetemplocal - active set point ${d}"
+                        if (d > 1){
+                        d=1}
+                        if (d < -1){
+                        d=-1}
+                        
+                        state?.integrator = (state.integrator + (d))
+                        if (state.integrator >= 5) {
+                        	state.integrator =5
+                        	log.info "state.integrator truncated to 5"
+                        	}
+                         if (state.integrator <= -5) {
+                        	state.integrator =-5
+                       		log.info "state.integrator truncated to -5"
+                        	}
+                        
+                        log.info "new state.integrator ${state.integrator}"
+state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")} state integrator ${state.integrator}%"        
+}else {
+log.info"fan only no chage of state.integrator ${state.integrator}"
+}
+state.acactive = false
+}
