@@ -1,5 +1,5 @@
 /**
- *  V2.0.5 Fix install issue fan set to null
+ *  V2.0.5 Fix install issue fan, heat, ac set to null
  *  V2.0.4 Fix night mode return vent opening
  *	V2.0.3 Fixed Reporting error by disabling reporting
  *  V2.0.2 Fixed namespace error
@@ -463,29 +463,51 @@ def checkNotify(evt){
     if(mainStateChange){
     if(mainState == "idle"){
       state.cool =false
+      
+      if(ACind.displayName != "null"){
     ACind.off()
+    }
+    if (Fanind.displayName !="null"){
     Fanind.off()
+    }
+    if (Heatind.displayName !="null"){
     Heatind.off()
+    }
     }
     if(mainState == "off"){
       state.cool =false
+      if(ACind.displayName != "null"){
     ACind.off()
+    }
+    if (Fanind.displayName !="null"){
     Fanind.off()
+    }
+    if (Heatind.displayName !="null"){
     Heatind.off()
+    }
     }
     if(mainState == "cool"){
       state.cool = true
-    ACind.on()
-    ReturnVents.setLevel(0)
+          if(ACind.displayName != "null"){
+ACind.on()
+
+}
+ReturnVents.setLevel(0)
     }
     if(mainState == "heat"){
+        if (Heatind.displayName !="null"){
+
     Heatind.on()
+    }
          if(state.night == false){
        ReturnVents.setLevel(100)
         }
     }
     if(mainState == "fan only"){
+        if (Fanind.displayName !="null"){
+
     Fanind.on()
+    }
         if(state.cool == false){
  if(state.night == false){
        ReturnVents.setLevel(100)
