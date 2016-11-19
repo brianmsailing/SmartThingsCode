@@ -929,8 +929,8 @@ def setVents(newVo){
             otherwise reset it
 		*/
         if (newVo != crntVo){
-        	def lB = crntVo - 5
-            def uB = crntVo + 5
+        	def lB = crntVo - 6
+            def uB = crntVo + 6
         	if (newVo == 100 && crntVo < 92){
             	//logger(10,"info","newVo == 100 && crntVo < 90: ${newVo == 100 && crntVo < 90}")
             	changeMe = true
