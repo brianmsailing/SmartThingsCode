@@ -1,4 +1,5 @@
 /**
+ *  V2.0.7 ac check for subscritpions
  *  V2.0.6 Fix install issue fan, heat, ac set to null
  *  V2.0.4 Fix night mode return vent opening
  *	V2.0.3 Fixed Reporting error by disabling reporting
@@ -72,7 +73,9 @@ def initialize() {
 	state.mainState = state.mainState ?: getNormalizedOS(tStat.currentValue("thermostatOperatingState"))
     state.mainMode = state.mainMode ?: getNormalizedOS(tStat.currentValue("thermostatMode"))
     state.mainFan = state.mainFan ?: tStat.currentValue("thermostatFanMode")
-    state.mainCSP = state.mainCSP ?: tStat.currentValue("coolingSetpoint").toFloat()
+       if (isAC()){ state.mainCSP = state.mainCSP ?: tStat.currentValue("coolingSetpoint").toFloat()
+    
+    }
     state.mainHSP = state.mainHSP ?: tStat.currentValue("heatingSetpoint").toFloat()
     state.mainTemp = state.mainTemp ?: tempSensors.currentValue("temperature").toFloat()
     state.voBackoff = 0
