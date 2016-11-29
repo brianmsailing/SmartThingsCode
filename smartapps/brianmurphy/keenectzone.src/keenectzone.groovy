@@ -48,6 +48,8 @@ settings.minVoC = 0
 settings.maxVoC = 100
 settings.FanVoC = 100
 settings.FanAHC = 100
+settings.coolOffset = 0
+settings.staticCSP = 70
 state?.integrator= 0 
 state.acactive = false
 }
