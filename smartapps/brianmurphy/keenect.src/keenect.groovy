@@ -1,4 +1,5 @@
 /**
+ *  V2.0.8 Ac now set as heat for non ac appliations
  *  V2.0.7 ac check for subscritpions
  *  V2.0.6 Fix install issue fan, heat, ac set to null
  *  V2.0.4 Fix night mode return vent opening
@@ -51,7 +52,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.0.5"
+	state.vParent = "2.0.8"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -75,7 +76,9 @@ def initialize() {
     state.mainFan = state.mainFan ?: tStat.currentValue("thermostatFanMode")
        if (isAC()){ state.mainCSP = state.mainCSP ?: tStat.currentValue("coolingSetpoint").toFloat()
     
+    }else {state.mainCSP = state.mainCSP ?: tStat.currentValue("heatingSetpoint").toFloat()
     }
+    
     state.mainHSP = state.mainHSP ?: tStat.currentValue("heatingSetpoint").toFloat()
     state.mainTemp = state.mainTemp ?: tempSensors.currentValue("temperature").toFloat()
     state.voBackoff = 0
@@ -97,7 +100,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
-state.vParent = "2.0.5"
+state.vParent = "2.0.8"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"

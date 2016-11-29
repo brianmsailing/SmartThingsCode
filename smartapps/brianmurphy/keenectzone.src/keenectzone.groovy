@@ -819,8 +819,10 @@ def zoneDisableHandeler(evt){
     if (zoneControlSwitch){
     	if (zoneIsEnabled){
        		logger(10,"warn", "Zone was enabled via: [${zoneControlSwitch.displayName}]")
+            state.enabled= true
     	} else {
        		logger(10,"warn", "Zone was disabled via: [${zoneControlSwitch.displayName}]")
+            state.enabled = false
     	}
     	zoneEvaluate([msg:"zoneSwitch"])
     }
@@ -959,8 +961,10 @@ def setVents(newVo){
 }
 
 def ventcheck(){
+if (state.enabled == true){
 def newVo=state.ventcheck
 setVents(newVo)
+}
 }
 
 def delayClose(){
