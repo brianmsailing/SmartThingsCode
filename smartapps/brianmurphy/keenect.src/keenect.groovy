@@ -1,4 +1,6 @@
 /**
+ * 	V2.1.0 Beta Integrator Control for heat only AC to be added
+ *  V2.0.9 Heat and AC indicator logic updated
  *  V2.0.8 Ac now set as heat for non ac appliations
  *  V2.0.7 ac check for subscritpions
  *  V2.0.6 Fix install issue fan, heat, ac set to null
@@ -8,7 +10,7 @@
  *  V2.0.1 Change reducted output flag to match seting of 30%
  *  V2.0 Keenect with proportional control of keen vents
  *
- *  Copyright 2015 Mike Maxwell
+ *  Copyright 2016 Brian Murphy
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -52,7 +54,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.0.8"
+	state.vParent = "2.1.0"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -100,7 +102,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
-state.vParent = "2.0.8"
+state.vParent = "2.1.0"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"
@@ -204,13 +206,13 @@ state.vParent = "2.0.8"
 						,state			: null
 					)
                 }   
-          		/*section("Reporting"){
+          		section("Reporting"){
          			href( "reporting"
 						,title		: "Available reports..."
 						,description: ""
 						,state		: null
 					)                
-                }*/
+                }
                 def dev  = ""
                 if (state.etf) dev = "\n(development instance)"
             	section (getVersionInfo() + dev) { }    
@@ -312,6 +314,14 @@ def reporting(){
 					,state		: null
 					,params		: [rptName:report]
 				)  
+            report = "Integrator"
+                href( "report"
+					,title		: report
+					,description: ""
+					,state		: null
+					,params		: [rptName:report]
+				) 
+                
             }
    }
 }
@@ -355,6 +365,12 @@ def getReport(rptName){
     	cMethod = "getZoneConfig"
      //   reports = "Main system:\n\tstate: ${state.mainState}\n\tmode: ${state.mainMode}\n\tcurrent temp: ${tempStr(t)}${cspStr}\n\theating set point: ${tempStr(state.mainHSP)}\n\n"
     }  
+        if (rptName == "Integrator"){
+    	standardReport = true
+    	cMethod = "getZoneInt"
+    }
+    
+    
     if (rptName == "Last results"){
     	standardReport = true
     	cMethod = "getEndReport"
@@ -369,7 +385,7 @@ def getReport(rptName){
             rtm = ((state.endTime - state.startTime) / 60000).toInteger()
             rtm = "${rtm} minutes"
         } 
-        reports = "Main system:\n\tstart: ${stime}\n\tend: ${etime}\n\tstart temp: ${sTemp}\n\tend temp: ${eTemp}\n\tduration: ${rtm}\n\n"
+        reports = "Main system:\n\tstart: ${stime}\n\tend: ${etime}\n\tduration: ${rtm}\n\n"
     }
     if (standardReport){
     	def sorted = childApps.sort{it.label}
@@ -501,7 +517,8 @@ ReturnVents.setLevel(0)
     if(mainState == "fan only"){
 
     Fanind.on()
-    
+    Heatind.off()
+    ACind.off()
         if(state.cool == false){
  if(state.night == false){
        ReturnVents.setLevel(100)
@@ -635,7 +652,7 @@ def manageoutputreduction(nor){
 
 def ChildNormalOutput(){
  state.reduceoutput = false
- outputreductionind.setLevel(100)
+ outputreductionind.setLevel(90)
 log.info "PARENT Ouput Reduction Off"
    childApps.each {child ->
     	child.allzoneoffset(false)}
@@ -644,7 +661,7 @@ log.info "PARENT Ouput Reduction Off"
 
 def ChildReduceOutput(){
 log.info "PARENT Output Reduction On"
-outputreductionind.setLevel(30)
+outputreductionind.setLevel(15)
   runIn (125, ChildNormalOutput)
         state.ouputflag = false
    childApps.each {child ->

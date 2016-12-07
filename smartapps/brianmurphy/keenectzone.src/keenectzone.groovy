@@ -1,4 +1,6 @@
  /*
+ *V2.4.0 Integrator control *BETA only for heat need to add for cool
+ *V2.3.2 New logic for reduced ouput request from child to parent
  *V2.3.1 Added aditional logic for reduce output in fan only mode
  *V2.3.0 Fix install issue fan set to null
  *V2.2.1 Added logc for child if parent is AC
@@ -56,14 +58,14 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.3.0"
+	state.vChild = "2.4"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.3.0"
+	state.vChild = "2.4"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
@@ -99,7 +101,7 @@ def main(){
 				*/
                 input(
                     name			: "vents"
-                    ,title			: "Keen vents in this Zone:"
+                    ,title			: "Keen vents in this zone:"
                     ,multiple		: true
                     ,required		: true
                     //,type			: "device.KeenHomeSmartVent"
@@ -108,7 +110,7 @@ def main(){
 				)
  				input(
             		name		: "tempSensors"
-                	,title		: "Temperature Sensor:"
+                	,title		: "Temperature sensor for zone:"
                 	,multiple	: false
                 	,required	: true
                 	,type		: "capability.temperatureMeasurement"
@@ -118,7 +120,7 @@ def main(){
             section("Settings"){
 				input(
             		name			: "minVo"
-                	,title			: "Minimum vent opening"
+                	,title			: "Heat minimum vent opening"
                 	,multiple		: false
                 	,required		: true
                 	,type			: "enum"
@@ -129,7 +131,7 @@ def main(){
                 if (minVo){
 					input(
             			name			: "maxVo"
-                		,title			: "Maximum vent opening"
+                		,title			: "Heat maximum vent opening"
                 		,multiple		: false
                 		,required		: true
                 		,type			: "enum"
@@ -151,7 +153,7 @@ def main(){
                     if (parent.isAC()){
                     input(
                         name            : "minVoC"
-                        ,title          : "Optional minimum vent opening for cooling"
+                        ,title          : "AC minimum vent opening"
                         ,multiple       : false
                         ,required       : false
                         ,type           : "enum"
@@ -162,7 +164,7 @@ def main(){
                     if (minVoC) {
                         input(
                             name            : "maxVoC"
-                            ,title          : "Optional maximum vent opening for cooling"
+                            ,title          : "AC maximum vent opening"
                             ,multiple       : false
                             ,required       : false
                             ,type           : "enum"
@@ -173,7 +175,7 @@ def main(){
                     }
                                    		input(
             		name			: "FanAHC"
-                	,title			: "Fan after heat Vent Level"
+                	,title			: "Fan after heat or AC Vent minimum level"
                 	,multiple       : false
                     ,required       : false
                     ,type           : "enum"
@@ -231,7 +233,7 @@ def main(){
                 }
             }
             section("Advanced"){
-				def afDesc = "\t" + getTitle("AggressiveTempVentCurve") + "\n\t" + getTitle("ventCloseWait") + "\n\t" + getTitle("zoneControlSwitchSummary") + "\n\t" + getTitle("logLevelSummary") + "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("pressureControl")
+				def afDesc = "\t" + getTitle("AggressiveTempVentCurve") + "\n\t" + getTitle("ventCloseWait") + "\n\t" + getTitle("zoneControlSwitchSummary") + "\n\t" + getTitle("logLevelSummary") + "\n\t" + getTitle("isIntegrator") + "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("pressureControl")
                 href( "advanced"
                     ,title			: ""
 					,description	: afDesc
@@ -262,26 +264,7 @@ def advanced(){
                     ,submitOnChange	: true
                     ,defaultValue	: false
             	) 
-                  	/*	input(
-            		name			: "FanVoC"
-                	,title			: "Fan Only Vent Level"
-                	,multiple       : false
-                    ,required       : false
-                    ,type           : "enum"
-                    ,options        : FANoptions()
-                    ,defaultValue : "100"
-                    ,submitOnChange : true
-            	)
-                             		input(
-            		name			: "FanAHC"
-                	,title			: "Fan after heat Vent Level"
-                	,multiple       : false
-                    ,required       : false
-                    ,type           : "enum"
-                    ,options        : FANoptions()
-                    ,defaultValue : "100"
-                    ,submitOnChange : true
-            	)*/
+                
             	input(
             		name			: "ventCloseWait"
                     ,title			: getTitle("ventCloseWait")
@@ -300,22 +283,7 @@ def advanced(){
                 	,type			: "capability.switch"
                     ,submitOnChange	: true
                 )
-               /*input(
-            		name			: "zoneindicateoffsetSwitch"
-                	,title			: getTitle("zoneindicateoffsetSwitch") 
-                	,multiple		: false
-                	,required		: false
-                	,type			: "capability.switch"
-                    ,submitOnChange	: true
-            	) 
-                    input(
-            		name			: "zoneneedoffsetSwitch"
-                	,title			: getTitle("zoneneedoffsetSwitch") 
-                	,multiple		: false
-                	,required		: false
-                	,type			: "capability.switch"
-                    ,submitOnChange	: true
-            	)*/      
+                   
          		input(
             		name			: "logLevel"
                 	,title			: "IDE logging level" 
@@ -326,7 +294,26 @@ def advanced(){
                 	,submitOnChange	: false
                    	,defaultValue	: "10"
             	)            
-          		input(
+          			def iintTitle = ""
+                    if (isIntegrator()) iintTitle = "BETA Zone Integration On Integrator = ${state.integrator}"
+                    else iintTitle = "BETA Zone Integration Off Integrator = ${state.integrator}"
+          			input(
+            			name			: "isIntegrator"
+               			,title			: iintTitle 
+               			,multiple		: false
+               			,required		: true
+               			,type			: "bool"
+                		,submitOnChange	: true
+                		,defaultValue	: true
+            		)
+                
+                
+                
+                
+                
+                
+                
+                input(
             		name			: "sendEventsToNotifications"
                 	,title			: getTitle("sendEventsToNotifications") 
                 	,multiple		: false
@@ -352,8 +339,9 @@ def advanced(){
 
 //zone control methods
 def zoneEvaluate(params){
+	state.vChild = "2.4"
 	logger(40,"debug","zoneEvaluate:enter-- parameters: ${params}")
-	
+	if (isIntegrator== false)state?.integrator= 0 
     // variables
     def evaluateVents = false
     
@@ -366,7 +354,8 @@ def zoneEvaluate(params){
 	def mainHSPLocal = state.mainHSP  ?: 0
 	def mainCSPLocal = state.mainCSP  ?: 0
 	def mainOnLocal = state.mainOn  ?: ""
-
+	def localintegrator = state.integrator.toFloat()
+    localintegrator=localintegrator.round(3)
 	//zone states    
 	def zoneDisabledLocal = fetchZoneControlState()
     def runningLocal
@@ -374,6 +363,10 @@ def zoneEvaluate(params){
     
     //always fetch these since the zone ownes them
     def zoneTempLocal = tempSensors.currentValue("temperature").toFloat()
+    
+    
+    
+    
     def coolOffsetLocal 
     if (settings.coolOffset) coolOffsetLocal = settings.coolOffset.toInteger()
     def heatOffsetLocal = settings.heatOffset.toInteger()
@@ -449,8 +442,8 @@ def zoneEvaluate(params){
                             state?.zoneTempLocal=zoneTempLocal
                         }
                          
-                        runIn(60*3, integrator)
-                        logger(10,"info","Main HVAC has shut down state end report available in 3 minutes.")                        
+                        runIn(60*5, integrator)
+                        logger(10,"info","Main HVAC has shut down state end report available in 5 minutes.")                        
                         
 						//check zone vent close options from zone
                     	if (zoneCloseOption >= 0){
@@ -496,8 +489,8 @@ def zoneEvaluate(params){
                             state?.zoneTempLocal=zoneTempLocal
                         }
                          
-                        runIn(60*3, integrator)
-                        logger(10,"info","Main HVAC has shut down state end report available in 3 minutes.")    
+                        runIn(60*5, integrator)
+                        logger(10,"info","Main HVAC has shut down state end report available in 5 minutes.")    
                         runningLocal = false
     				} 
                     //check zone vent close options from zone
@@ -528,6 +521,7 @@ def zoneEvaluate(params){
     //always check for main quick  AggressiveTempVentCurveActive
    
    def tempBool = false
+   state.fanonly =false
    state.AggressiveTempVentCurveActive = false
     if (settings.AggressiveTempVentCurve){
     	 state.AggressiveTempVentCurveActive = true
@@ -553,20 +547,32 @@ def zoneEvaluate(params){
 
     	def slResult = ""
        	if (mainStateLocal == "heat"){
+        log.info "zoneTempLocal before integrator ${zoneTempLocal}"
+        zoneTempLocal= (zoneTempLocal+localintegrator).round(3) //integrator control of heating 
+        log.info "Local Integrator ${localintegrator} and Local Integrator + ZoneTempLocal = ${zoneTempLocal}"
+
+        
         state.acactive = true
   log.info "CHILD evaluateVents Heat"
  state.zoneneedofset = false
-
+state.parentneedoffset = false
         	state.activeSetPoint = zoneHSPLocal
-            if (zoneTempLocal < zoneHSPLocal-1.5){
+            if (zoneTempLocal < zoneHSPLocal-1.4){
             state.zoneneedofset = true
             logger(10,"info","CHILD zone needs offset")
             }
-            if (zoneTempLocal > zoneHSPLocal-1.5) {
+                 if (zoneTempLocal < zoneHSPLocal-1.7){
+            state.parentneedoffset = true
+            logger(10,"info","Parent needs offset")
+            }
+            if (zoneTempLocal > zoneHSPLocal-1.4) {
              state.zoneneedofset = false
              logger(10,"info","CHILD zone dose not need offset")
              }
-            
+                        if (zoneTempLocal > zoneHSPLocal-1.7) {
+             state.parentneedoffset = false
+             logger(10,"info","CHILD zone dose not need offset")
+             }
        		if (zoneTempLocal >= zoneHSPLocal){
             	state.lastVO = minVoLocal
            		
@@ -606,7 +612,7 @@ def zoneEvaluate(params){
                   log.info"output prior to reduction for this zone ${VoLocal}"
                  
                  outred = true
-                 VoLocal=VoLocal*0.30
+                 VoLocal=VoLocal*0.19
                   log.info"output after reduction for this zone ${VoLocal}"
                   }
                   }
@@ -635,18 +641,26 @@ def zoneEvaluate(params){
             }   
            	
         } else if (mainStateLocal == "cool"){
-                   	   log.info "CHILD evaluateVents Cooling"
-
-        	state.activeSetPoint = zoneCSPLocal
-                    state.zoneneedofset = false
-                    state.acactive = true
-            if (zoneTempLocal > zoneCSPLocal+1.5){
-         state.zoneneedofset = true
-           logger(10,"info","CHILD zone needs offset")
+log.info "CHILD evaluateVents Cooling"
+state.activeSetPoint = zoneCSPLocal
+state.zoneneedofset = false
+state.parentneedoffset = false
+state.acactive = true
+             if (zoneTempLocal > zoneCSPLocal-1.4){
+            state.zoneneedofset = true
+            logger(10,"info","CHILD zone needs offset")
             }
-            if (zoneTempLocal < zoneCSPLocal+1.5) {
+                 if (zoneTempLocal > zoneCSPLocal-1.7){
+            state.parentneedoffset = true
+            logger(10,"info","Parent needs offset")
+            }
+            if (zoneTempLocal < zoneCSPLocal-1.4) {
              state.zoneneedofset = false
-            logger(10,"info", "CHILD zone dose not need offset")
+             logger(10,"info","CHILD zone dose not need offset")
+             }
+                        if (zoneTempLocal < zoneCSPLocal-1.7) {
+             state.parentneedoffset = false
+             logger(10,"info","Parentdose not need offset")
              }
   
        		if (zoneTempLocal <= zoneCSPLocal){
@@ -683,7 +697,7 @@ def zoneEvaluate(params){
                   log.info"output prior to reduction for this zone ${VoLocal}"
                  
                  outred = true
-                 VoLocal=VoLocal*0.30
+                 VoLocal=VoLocal*0.20
                   log.info"output reduction for this zone needed ${VoLocal}"
                   }
                   }
@@ -735,18 +749,19 @@ def zoneEvaluate(params){
                VoLocal = fanAHLocal
                    }
             logger(10,"info","fan on after heat or AC, open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
+            state.fanonly =true
             } 
         setVents(VoLocal)
         } else {
             logger(10,"info","Nothing to do, main HVAC is not running, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}")
        	}
-                                                                //  log.info "output reduction ${state.outputreduction} zone need ${state.zoneneedofset}"
+if (state.fanonly == false){                                                               //  log.info "output reduction ${state.outputreduction} zone need ${state.zoneneedofset}"
 if (state.acactive == true){
-      if (state.zoneneedofset == false){
+      if (state.parentneedoffset == false){
 parent.manageoutputreduction(false)
  log.info "CHILD Clearing System Reduced Ouput"
              }
-      if (state.zoneneedofset == true){
+      if (state.parentneedoffset == true){
 
           parent.manageoutputreduction(true)
  log.info "CHILD Requesting System Reduced Ouput"
@@ -757,6 +772,9 @@ parent.manageoutputreduction(false)
          log.info "CHILD Clearing System Reduced Ouput fan only"
 
         }
+        }else {parent.manageoutputreduction(false)
+ log.info "CHILD Clearing System Reduced Ouput"
+ }
         
     }
     //write state
@@ -933,9 +951,11 @@ def setVents(newVo){
             otherwise reset it
 		*/
         if (newVo != crntVo){
-        	def lB = crntVo - 6
-            def uB = crntVo + 6
-        	if (newVo == 100 && crntVo < 92){
+        	def lB = crntVo - 9    
+            
+            //92-6 
+            def uB = crntVo + 9
+        	if (newVo == 100 && crntVo < 90){
             	//logger(10,"info","newVo == 100 && crntVo < 90: ${newVo == 100 && crntVo < 90}")
             	changeMe = true
             } else if ((newVo < lB || newVo > uB) && newVo != 100){
@@ -1123,7 +1143,12 @@ def getZoneConfig(){
     
     def zt = hspStr + cspStr
     if (zoneControlSwitch) zc = "is ${zoneControlSwitch.currentValue("switch")} via [${zoneControlSwitch.displayName}]"
-	return "\n\tVents: ${vents}\n\ttemp sensor: [${tempSensors}]\n\tminimum vent opening: ${minVo}%\n\tmaximum vent opening: ${maxVo}%\n\t${zt}\n\tzone control: ${zc}\n\tversion: ${state.vChild ?: "No data available yet."}"
+	return "\n\tVents: ${vents}\n\ttemp sensor: [${tempSensors}]\n\tminimum vent opening: ${minVo}%\n\tmaximum vent opening: ${maxVo}%\n\t${zt}\n\tzone control: ${zc}"
+}
+
+def getZoneInt(){
+	
+	return ": Integrator: ${state.integrator}"
 }
 
 def getZoneState(){
@@ -1163,27 +1188,33 @@ log.info "Last run state.integrator ${state.integrator}"
  def asp = state.activeSetPoint
  def d
   d = (zoneTempLocal - asp).toFloat()
- d = d.round(1)
+ d = (d*0.20).round(1)
                     	log.info "zonetemplocal - active set point ${d}"
-                        if (d > 1){
-                        d=1}
-                        if (d < -1){
-                        d=-1}
+                        if (d > 0.3){
+                        d=0.3}
+                        if (d < -0.3){
+                        d=-0.3}
                         
                         state?.integrator = (state.integrator + (d))
-                        if (state.integrator >= 5) {
-                        	state.integrator =5
+                        if (state.integrator >= 3) {
+                        	state.integrator =3
                         	log.info "state.integrator truncated to 5"
                         	}
-                         if (state.integrator <= -5) {
-                        	state.integrator =-5
+                         if (state.integrator <= -3) {
+                        	state.integrator =-3
                        		log.info "state.integrator truncated to -5"
                         	}
-                        
+                        def intround= state.integrator
+                        intround=intround.round(2)
+                        state.integrator=intround
                         log.info "new state.integrator ${state.integrator}"
-state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")} state integrator ${state.integrator}%"        
+state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")} \n\tIntegrator ${state.integrator}"        
 }else {
 log.info"fan only no chage of state.integrator ${state.integrator}"
 }
 state.acactive = false
+}
+
+def isIntegrator(){
+	return (settings.isIntegrator == null || settings.isIntegrator)
 }
