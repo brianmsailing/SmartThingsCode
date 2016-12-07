@@ -722,7 +722,7 @@ state.acactive = true
             }   
             
         }else if (mainStateLocal == "fan only"){
-        logger(10,"info","volocal entering fan only ${VoLocal}")
+        logger(30,"info","volocal entering fan only ${VoLocal}")
              if (state.acactive == false) {
             // log.info "${state.mainMode}"
              if (state.mainMode == "heat"){
