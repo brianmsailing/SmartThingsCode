@@ -636,12 +636,12 @@ def managePressure(evt){
 
 def manageoutputreduction(nor){
 	//"false" = not needed 
-  log.info "nor ${nor}"
+logger (30,"info", "nor ${nor}")
   //state.outputflag = true
     if (nor == true){
     	state.reduceoutput = true
        ChildReduceOutput()
-       log.info "PARENT state.reduceoutput = true" 
+       logger (30,"info", "PARENT state.reduceoutput = true") 
  
 }
   // if (nor == false){
@@ -653,14 +653,14 @@ def manageoutputreduction(nor){
 def ChildNormalOutput(){
  state.reduceoutput = false
  outputreductionind.setLevel(90)
-log.info "PARENT Ouput Reduction Off"
+logger (30,"info", "PARENT Ouput Reduction Off")
    childApps.each {child ->
     	child.allzoneoffset(false)}
         }
 
 
 def ChildReduceOutput(){
-log.info "PARENT Output Reduction On"
+logger (30,"info","PARENT Output Reduction On")
 outputreductionind.setLevel(15)
   runIn (125, ChildNormalOutput)
         state.ouputflag = false

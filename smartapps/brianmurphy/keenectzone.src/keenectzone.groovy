@@ -547,31 +547,31 @@ def zoneEvaluate(params){
 
     	def slResult = ""
        	if (mainStateLocal == "heat"){
-        log.info "zoneTempLocal before integrator ${zoneTempLocal}"
+        def zoneTempLocalH = zoneTempLocal
         zoneTempLocal= (zoneTempLocal+localintegrator).round(3) //integrator control of heating 
-        log.info "Local Integrator ${localintegrator} and Local Integrator + ZoneTempLocal = ${zoneTempLocal}"
+logger (10,"info", "ZoneTempLocal before integrator ${zoneTempLocal} Local Integrator ${localintegrator} and Local Integrator + ZoneTempLocal = ${zoneTempLocal}")
 
         
         state.acactive = true
-  log.info "CHILD evaluateVents Heat"
+logger (30,"info", "CHILD evaluateVents Heat")
  state.zoneneedofset = false
 state.parentneedoffset = false
         	state.activeSetPoint = zoneHSPLocal
             if (zoneTempLocal < zoneHSPLocal-1.4){
             state.zoneneedofset = true
-            logger(10,"info","CHILD zone needs offset")
+            logger(30,"info","CHILD zone needs offset")
             }
                  if (zoneTempLocal < zoneHSPLocal-1.7){
             state.parentneedoffset = true
-            logger(10,"info","Parent needs offset")
+            logger(30,"info","Parent needs offset")
             }
             if (zoneTempLocal > zoneHSPLocal-1.4) {
              state.zoneneedofset = false
-             logger(10,"info","CHILD zone dose not need offset")
+             logger(30,"info","CHILD zone dose not need offset")
              }
                         if (zoneTempLocal > zoneHSPLocal-1.7) {
              state.parentneedoffset = false
-             logger(10,"info","CHILD zone dose not need offset")
+             logger(30,"info","CHILD zone dose not need offset")
              }
        		if (zoneTempLocal >= zoneHSPLocal){
             	state.lastVO = minVoLocal
@@ -581,7 +581,7 @@ state.parentneedoffset = false
                 VoLocal=0
                 } else{slResult = setVents(minVoLocal)
                 VoLocal=minVoLocal}
-             	logger(10,"info","CHILD Zone temp is ${tempStr(zoneTempLocal)}, heating setpoint of ${tempStr(zoneHSPLocal)} is met${slResult}")
+             	logger(10,"info","Zone temp is ${tempStr(zoneTempLocal)}, heating setpoint of ${tempStr(zoneHSPLocal)} is met${slResult}")
 				runningLocal = false
           	} else {
            			
@@ -759,21 +759,21 @@ if (state.fanonly == false){                                                    
 if (state.acactive == true){
       if (state.parentneedoffset == false){
 parent.manageoutputreduction(false)
- log.info "CHILD Clearing System Reduced Ouput"
+ logger (30,"info", "CHILD Clearing System Reduced Ouput")
              }
       if (state.parentneedoffset == true){
 
           parent.manageoutputreduction(true)
- log.info "CHILD Requesting System Reduced Ouput"
+logger (30,"info", "CHILD Requesting System Reduced Ouput")
              }      
         }
         if (state.acactive == false){
         parent.manageoutputreduction(false)
-         log.info "CHILD Clearing System Reduced Ouput fan only"
+       logger (30,"info","CHILD Clearing System Reduced Ouput fan only")
 
         }
         }else {parent.manageoutputreduction(false)
- log.info "CHILD Clearing System Reduced Ouput"
+logger (30,"info", "CHILD Clearing System Reduced Ouput")
  }
         
     }
