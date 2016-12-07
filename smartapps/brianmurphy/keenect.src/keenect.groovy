@@ -106,15 +106,20 @@ state.vParent = "2.1.0"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"
-        ,title		: "Zones"
+      //  ,title		: "Zones"
         ,install	: true
         ,uninstall	: installed
         ){	
              if (installed){
-        		section(){
-        			app(name: "childZones", appName: "keenectZone", namespace: "BrianMurphy", description: "Create New Vent Zone...", multiple: true)	
+             	section("Reporting"){
+         			href( "reporting"
+						,title		: "Available reports..."
+						,description: ""
+						,state		: null
+					)                
                 }
-             }
+                }
+            
 		     section("Configuration"){
                    	input(
                         name			: "tStat"
@@ -133,7 +138,73 @@ state.vParent = "2.1.0"
                         ,submitOnChange	: false
             		) 
 
-  		input(
+  		
+                    
+		    		def iacTitle = ""
+                    if (isAC()) iacTitle = "System is AC capable"
+                    else iacTitle = "System is heat only"
+          			input(
+            			name			: "isACcapable"
+               			,title			: iacTitle 
+               			,multiple		: false
+               			,required		: true
+               			,type			: "bool"
+                		,submitOnChange	: true
+                		,defaultValue	: true
+            		)            
+            }       
+             if (installed){
+        		section(){
+        			app(name: "childZones", appName: "keenectZone", namespace: "BrianMurphy", description: "Create New Vent Zone...", multiple: true)	
+                }
+             }
+            if (installed){
+                section("Advanced"){
+                	def afDesc = "\t" + getTitle("logLevelSummary") + "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("fanRunOn") + "\n\t" + getTitle("pressureSwitchSummary")
+					href( "advanced"
+						,title			: "" 
+						,description	: "Configure advanced settings"
+						,state			: null
+					)
+                }   
+          	
+                def dev  = ""
+                if (state.etf) dev = "\n(development instance)"
+            	section (getVersionInfo() + dev) { }    
+            }
+	}
+}
+
+def advanced(){
+    return dynamicPage(
+    	name		: "advanced"
+        ,title		: "Advanced Options"
+        ,install	: false
+        ,uninstall	: false
+        ){
+         section(){
+                 	input(
+            	name			: "logLevel"
+               	,title			: "IDE logging level" 
+               	,multiple		: false
+                ,required		: true
+                ,type			: "enum"
+ 				,options		: getLogLevels()
+                ,submitOnChange	: false
+                ,defaultValue	: "10"
+            )  
+         input(
+            			name			: "indicators"
+               			,title			: "Optional virtural indicators" 
+               			,multiple		: false
+               			,required		: true
+               			,type			: "bool"
+                		,submitOnChange	: true
+                		,defaultValue	: false
+            		)     
+         
+        if (indicators){
+        input(
             			name			: "ACind"
                 		,title			: "Optional Virtual Switch to indicate AC on/off"
                 		,multiple		: false
@@ -157,6 +228,15 @@ state.vParent = "2.1.0"
                 		,type			: "capability.switch"
                         ,submitOnChange	: false
             		)
+                                         input(
+            			name			: "outputreductionind"
+                		,title			: "Optional Virtual Switch to indicate OutputReduction on/off"
+                		,multiple		: true
+                		,required		: false
+                		,type			: "capability.switchLevel"
+                        ,submitOnChange	: false
+            		)
+                    }
                         input(
             			name			: "ReturnVents"
                 		,title			: "Optional Return air vents to open during heating"
@@ -166,14 +246,7 @@ state.vParent = "2.1.0"
                         ,submitOnChange	: false
             		)
                     
-                        input(
-            			name			: "outputreductionind"
-                		,title			: "Optional Virtual Switch to indicate OutputReduction on/off"
-                		,multiple		: true
-                		,required		: false
-                		,type			: "capability.switchLevel"
-                        ,submitOnChange	: false
-            		)
+   
         
                     input(
             		name			: "nightmode"
@@ -183,51 +256,6 @@ state.vParent = "2.1.0"
                 	,type			: "capability.switch"
                     ,submitOnChange	: true
                 )
-                    
-		    		def iacTitle = ""
-                    if (isAC()) iacTitle = "System is AC capable"
-                    else iacTitle = "System is heat only"
-          			input(
-            			name			: "isACcapable"
-               			,title			: iacTitle 
-               			,multiple		: false
-               			,required		: true
-               			,type			: "bool"
-                		,submitOnChange	: true
-                		,defaultValue	: true
-            		)            
-            }        	
-            if (installed){
-                section("Advanced"){
-                	def afDesc = "\t" + getTitle("logLevelSummary") + "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("fanRunOn") + "\n\t" + getTitle("pressureSwitchSummary")
-					href( "advanced"
-						,title			: "" 
-						,description	: afDesc
-						,state			: null
-					)
-                }   
-          		section("Reporting"){
-         			href( "reporting"
-						,title		: "Available reports..."
-						,description: ""
-						,state		: null
-					)                
-                }
-                def dev  = ""
-                if (state.etf) dev = "\n(development instance)"
-            	section (getVersionInfo() + dev) { }    
-            }
-	}
-}
-
-def advanced(){
-    return dynamicPage(
-    	name		: "advanced"
-        ,title		: "Advanced Options"
-        ,install	: false
-        ,uninstall	: false
-        ){
-         section(){
  			input(
             	name			: "setVo"
                	,title			: "Force vent opening to:"
@@ -243,16 +271,7 @@ def advanced(){
             	vo = settings.setVo.toInteger()
                 if (vo > -1) paragraph (setChildVents(vo))
             }
-         	input(
-            	name			: "logLevel"
-               	,title			: "IDE logging level" 
-               	,multiple		: false
-                ,required		: true
-                ,type			: "enum"
- 				,options		: getLogLevels()
-                ,submitOnChange	: false
-                ,defaultValue	: "10"
-            )  
+ 
           	input(
             	name			: "sendEventsToNotifications"
                	,title			: getTitle("sendEventsToNotifications") 
@@ -485,40 +504,42 @@ def checkNotify(evt){
     if(mainStateChange){
     if(mainState == "idle"){
       state.cool =false
+      if(indicators){
     ACind.off()
     Fanind.off()
     Heatind.off()
-    
+    }
     }
     if(mainState == "off"){
       state.cool =false
+      if(indicators){
     ACind.off()
-    
-    Fanind.off()
-    
+    Fanind.off() 
     Heatind.off()
-    
+    }
     }
     if(mainState == "cool"){
       state.cool = true
+      if(indicators){
 ACind.on()
-
+}
 
 ReturnVents.setLevel(0)
     }
     if(mainState == "heat"){
-
+if(indicators){
     Heatind.on()
-    
+    }
          if(state.night == false){
        ReturnVents.setLevel(100)
         }
     }
     if(mainState == "fan only"){
-
+if(indicators){
     Fanind.on()
     Heatind.off()
     ACind.off()
+    }
         if(state.cool == false){
  if(state.night == false){
        ReturnVents.setLevel(100)
