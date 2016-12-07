@@ -78,6 +78,14 @@ preferences {	page(name: "selectThermostats", title: "Thermostats", install: fal
                 		,type			: "capability.temperatureMeasurement"
                         ,submitOnChange	: false
             		) 
+                    input(
+            			name			: "tempSensor6"
+                		,title			: "Thermostat temperature sensor:"
+                		,multiple		: false
+                		,required		: true
+                		,type			: "capability.temperatureMeasurement"
+                        ,submitOnChange	: false
+            		) 
                           input(
             			name			: "TempSpan"
                 		,title			: "Temp Span Output to Virtual Switch"
@@ -86,7 +94,10 @@ preferences {	page(name: "selectThermostats", title: "Thermostats", install: fal
                 		,type			: "capability.switchLevel"
                         ,submitOnChange	: false
             		)
-                 
+                    
+        input "button", "capability.switch", required: true,
+              title: "Which switch?"
+    
                	input "starttime", "time", title: "Start time", required: true
         input "endtime", "time", title: "End time", required: true
         input "initializestate", "bool", title: "initializestate", required:true
@@ -135,10 +146,27 @@ def mainState = tStat.currentValue("thermostatOperatingState")
 		if (mainState == "idle"){
 		def climateName = (givenClimate ?: 'Home').capitalize()
 		state.fanon= true
-		log.debug "setClimate, location.mode = $location.mode, newMode = $newMode, location.modes = $location.modes"
 		ecobee.setThisTstatClimate(climateName)
 		log.debug"ecobeeSetClimate>set ecobee thermostat(s) to ${climateName} program as requested"
-	}else {log.debug "furnace not idle try again in 1 min"
+	}else {log.debug "furnace not idle will try again in 1 min"
+    runIn(60, setClimateon)
+    }
+    
+}
+
+def setClimateBasement() {
+def mainState = tStat.currentValue("thermostatOperatingState")
+
+		if (mainState == "idle"){
+		def climateName = (Basement ?: 'Basement').capitalize()
+		state.fanon= true
+		ecobee.setThisTstatClimate(climateName)
+		log.debug"ecobeeSetClimate>set ecobee thermostat(s) to ${climateName} program as requested"
+          def message = "ecobeeSetClimate>set ecobee thermostat(s) to ${climateName} program as requested"
+  
+        sendPush(message)
+	}else {log.debug "furnace not idle will try again in 1 min"
+    runIn(60, setClimateBasement)
     }
     
 }
@@ -146,7 +174,6 @@ def mainState = tStat.currentValue("thermostatOperatingState")
 def setClimateoff() {
 	//def climateName = (givenClimateoff ?: 'Home').capitalize()
 		state.fanon= false
-		//log.debug "setClimate, location.mode = $location.mode, newMode = $newMode, location.modes = $location.modes"
 		ecobee.resumeThisTstat()
 		log.debug"ecobeeSetClimate>set ecobee thermostat(s) to resume as requested"
 	
@@ -156,7 +183,7 @@ def setClimateoff() {
 
 def initialize() {
 	subscribe(ecobee, "climateList", climateListHandler)
-
+   subscribe(button, "switch.on", buttonHandler)
 schedule(starttime, swon)
 schedule(endtime, swoff)
 state.on = initializestate
@@ -186,6 +213,8 @@ state.fanon = false
     state.tempSensor3 = state.tempSensor3 ?:tempSensor3.currentValue("temperature").toFloat()
     state.tempSensor4 = state.tempSensor4 ?:tempSensor4.currentValue("temperature").toFloat()
     state.tempSensor5 = state.tempSensor5 ?:tempSensor5.currentValue("temperature").toFloat()
+    state.tempSensor6 = state.tempSensor6 ?:tempSensor6.currentValue("temperature").toFloat()
+
 }
 
 def main (evt){
@@ -200,31 +229,32 @@ def    tempSensor2 = tempSensor2.currentValue("temperature").toFloat()
 def    tempSensor3 = tempSensor3.currentValue("temperature").toFloat()
 def    tempSensor4 = tempSensor4.currentValue("temperature").toFloat()
 def    tempSensor5 = tempSensor5.currentValue("temperature").toFloat()
-def tempaverage = 0.0
+def    tempSensor6 = tempSensor6.currentValue("temperature").toFloat()
+
 //log.debug "temp sensor 1 ${tempSensor1}"
 //log.debug "temp sensor 2 ${tempSensor2}"
 //log.debug "temp sensor 3 ${tempSensor3}"
 //log.debug "temp sensor 4 ${tempSensor4}"
 //log.debug "temp sensor 5 ${tempSensor5}"
-def temp = [tempSensor1,tempSensor2,tempSensor3,tempSensor4,tempSensor5]
+def temp = [tempSensor1,tempSensor2,tempSensor3,tempSensor4,tempSensor5,tempSensor6]
 def max = temp.max()
 def min = temp.min()
-TempSpan.setLevel(max-min)
+TempSpan.setLevel((max-min).round(3))
 log.info "Temp Span ${(max-min).round(3)}, max ${max}, min${min}"
 //log.debug "tempaverage ${tempaverage}"
 if (state.on == true){
 if (mainMode == "heat"){
 
-if (min+3.1< mainHSP || max-min >3.1){
+if (min+3.0< mainHSP || max-min >3.0){
 
-log.debug "Zone temp min ${min} < 3.1 from main heat set point ${mainHSP} or temp span ${(max-min).round(3)} >3.1 fan on"
+log.debug "Zone temp min ${min} < 3.0 from main heat set point ${mainHSP} or temp span ${(max-min).round(3)} >3.0 fan on"
 if (state.fanon == false){
 setClimateon()
 }
 if (state.fanon == true){
 log.debug "nothing to do fan on"
 }
-}else {log.debug "Zone temp min ${min} > 3.1 from main heat set point ${mainHSP} or temp span ${(max-min).round(3)} <3.1 fan off"
+}else {log.debug "Zone temp min ${min} > 3.0 from main heat set point ${mainHSP} or temp span ${(max-min).round(3)} <3.0 fan off"
 if (state.fanon == true){
 setClimateoff()
 }
@@ -236,6 +266,12 @@ log.debug "nothing to do fan off"
 
 }
 }else {log.debug "state off"}
+}
+
+def buttonHandler(evt) {
+log.debug "basement zone mode"
+setClimateBasement()
+runIn(60*60, setClimateoff)
 }
 
 
@@ -260,6 +296,9 @@ def selectProgram() {
 		}
         section("Select Program for fan off") {
 			input "givenClimateoff", "enum", title: "Which program?", options: ecobeePrograms, required: true
+		}
+          section("Select Program for Basement") {
+			input "Basement", "enum", title: "Which program?", options: ecobeePrograms, required: true
 		}
 	}
 }
