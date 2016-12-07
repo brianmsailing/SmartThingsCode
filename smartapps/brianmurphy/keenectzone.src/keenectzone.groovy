@@ -244,7 +244,7 @@ def main(){
 }
 
 def advanced(){
-	state?.integrator =0
+	//state?.integrator =0
     def pEnabled = false
     try{ pEnabled = parent.hasPressure() }
     catch(e){}
@@ -296,7 +296,9 @@ def advanced(){
             	)            
           			def iintTitle = ""
                     if (isIntegrator()) iintTitle = "BETA Zone Integration On Integrator = ${state.integrator}"
-                    else iintTitle = "BETA Zone Integration Off Integrator = ${state.integrator}"
+                    else {iintTitle = "BETA Zone Integration Off Integrator = ${state.integrator}"
+                    state?.integrator =0}
+                    
           			input(
             			name			: "isIntegrator"
                			,title			: iintTitle 
@@ -1188,12 +1190,16 @@ log.info "Last run state.integrator ${state.integrator}"
  def asp = state.activeSetPoint
  def d
   d = (zoneTempLocal - asp).toFloat()
- d = (d*0.20).round(1)
-                    	log.info "zonetemplocal - active set point ${d}"
-                        if (d > 0.3){
-                        d=0.3}
-                        if (d < -0.3){
-                        d=-0.3}
+ d = (d*0.50).round(1)
+ 
+ if (d>0.15 || d<-0.15){
+ log.info "${d}>0.15 || ${d}<-0.15"
+ }else { d= 0}
+                   	log.info "zonetemplocal - active set point ${d}"
+                        if (d > 0.4){
+                        d=0.4}
+                        if (d < -0.4){
+                        d=-0.4}
                         
                         state?.integrator = (state.integrator + (d))
                         if (state.integrator >= 3) {
@@ -1208,6 +1214,8 @@ log.info "Last run state.integrator ${state.integrator}"
                         intround=intround.round(2)
                         state.integrator=intround
                         log.info "new state.integrator ${state.integrator}"
+                       
+                        
 state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")} \n\tIntegrator ${state.integrator}"        
 }else {
 log.info"fan only no chage of state.integrator ${state.integrator}"
