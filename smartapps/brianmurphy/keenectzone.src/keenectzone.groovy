@@ -1190,7 +1190,7 @@ log.info "Last run state.integrator ${state.integrator}"
  def asp = state.activeSetPoint
  def d
   d = (zoneTempLocal - asp).toFloat()
- d = (d*0.50).round(1)
+ d = (d*0.50).round(2)
  
  if (d>0.15 || d<-0.15){
  log.info "${d}>0.15 || ${d}<-0.15"
@@ -1204,15 +1204,16 @@ log.info "Last run state.integrator ${state.integrator}"
                         state?.integrator = (state.integrator + (d))
                         if (state.integrator >= 3) {
                         	state.integrator =3
-                        	log.info "state.integrator truncated to 5"
+                        	log.info "state.integrator truncated to 3"
                         	}
                          if (state.integrator <= -3) {
                         	state.integrator =-3
-                       		log.info "state.integrator truncated to -5"
+                       		log.info "state.integrator truncated to -3"
                         	}
-                        //def intround= state.integrator
+                       // def intround= state.integrator instanceof Integer
+                       // if (intround !=0 || intround != null){
                         //intround=intround.round(2)
-                       // state.integrator=intround
+                      //  state.integrator=intround}
                         log.info "new state.integrator ${state.integrator}"
                        
                         
