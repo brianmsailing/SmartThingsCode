@@ -563,7 +563,7 @@ state.parentneedoffset = false
             state.zoneneedofset = true
             logger(30,"info","CHILD zone needs offset")
             }
-                 if (zoneTempLocal < zoneHSPLocal-1.7){
+                 if (zoneTempLocal < zoneHSPLocal-2.0){
             state.parentneedoffset = true
             logger(30,"info","Parent needs offset")
             }
@@ -571,7 +571,7 @@ state.parentneedoffset = false
              state.zoneneedofset = false
              logger(30,"info","CHILD zone dose not need offset")
              }
-                        if (zoneTempLocal > zoneHSPLocal-1.7) {
+                        if (zoneTempLocal > zoneHSPLocal-2.0) {
              state.parentneedoffset = false
              logger(30,"info","CHILD zone dose not need offset")
              }
@@ -1210,9 +1210,9 @@ log.info "Last run state.integrator ${state.integrator}"
                         	state.integrator =-3
                        		log.info "state.integrator truncated to -5"
                         	}
-                        def intround= state.integrator
-                        intround=intround.round(2)
-                        state.integrator=intround
+                        //def intround= state.integrator
+                        //intround=intround.round(2)
+                       // state.integrator=intround
                         log.info "new state.integrator ${state.integrator}"
                        
                         
