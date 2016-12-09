@@ -310,7 +310,7 @@ def advanced(){
             		)
                 
                 
-                
+                if (isIntegrator== false) state?.integrator= 0 
                 
                 
                 
@@ -343,7 +343,7 @@ def advanced(){
 def zoneEvaluate(params){
 	state.vChild = "2.4"
 	logger(40,"debug","zoneEvaluate:enter-- parameters: ${params}")
-	if (isIntegrator== false)state?.integrator= 0 
+	if (isIntegrator== false) state?.integrator= 0 
     // variables
     def evaluateVents = false
     
@@ -1149,8 +1149,11 @@ def getZoneConfig(){
 }
 
 def getZoneInt(){
-	
-	return ": Integrator: ${state.integrator}"
+	float t = state.integrator
+  //  log.info "${t}"
+  t= t.round(4)
+   // log.info "${t}"
+	return ": Integrator: ${t}"
 }
 
 def getZoneState(){
@@ -1210,10 +1213,9 @@ log.info "Last run state.integrator ${state.integrator}"
                         	state.integrator =-3
                        		log.info "state.integrator truncated to -3"
                         	}
-                       // def intround= state.integrator instanceof Integer
-                       // if (intround !=0 || intround != null){
-                        //intround=intround.round(2)
-                      //  state.integrator=intround}
+                        float intround= state.integrator 
+                        intround=intround.round(4)
+                        state.integrator=intround
                         log.info "new state.integrator ${state.integrator}"
                        
                         
