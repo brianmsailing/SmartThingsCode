@@ -233,7 +233,7 @@ def main(){
                 }
             }
             section("Advanced"){
-				def afDesc = "\t" + getTitle("AggressiveTempVentCurve") + "\n\t" + getTitle("ventCloseWait") + "\n\t" + getTitle("zoneControlSwitchSummary") + "\n\t" + getTitle("logLevelSummary") + "\n\t" + getTitle("isIntegrator") + "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("pressureControl")
+				def afDesc = "\t" + getTitle("AggressiveTempVentCurve") + "\n\t" + getTitle("ventCloseWait") + "\n\t" + getTitle("zoneControlSwitchSummary") + "\n\t" + getTitle("logLevelSummary") + /*"\n\t" + getTitle("isIntegrator") +*/ "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("pressureControl")
                 href( "advanced"
                     ,title			: ""
 					,description	: afDesc
@@ -294,7 +294,7 @@ def advanced(){
                 	,submitOnChange	: false
                    	,defaultValue	: "10"
             	)            
-          			def iintTitle = ""
+          		/*	def iintTitle = ""
                     if (isIntegrator()) iintTitle = "BETA Zone Integration On Integrator = ${state.integrator}"
                     else {iintTitle = "BETA Zone Integration Off Integrator = ${state.integrator}"
                     state?.integrator =0}
@@ -313,7 +313,7 @@ def advanced(){
                 if (isIntegrator== false) state?.integrator= 0 
                 
                 
-                
+                */
                 
                 input(
             		name			: "sendEventsToNotifications"
@@ -549,9 +549,9 @@ def zoneEvaluate(params){
 
     	def slResult = ""
        	if (mainStateLocal == "heat"){
-        def zoneTempLocalH = zoneTempLocal
-        zoneTempLocal= (zoneTempLocal+localintegrator).round(3) //integrator control of heating 
-logger (10,"info", "ZoneTempLocal before integrator ${zoneTempLocal} Local Integrator ${localintegrator} and Local Integrator + ZoneTempLocal = ${zoneTempLocal}")
+     //   def zoneTempLocalH = zoneTempLocal
+   //     zoneTempLocal= (zoneTempLocal+localintegrator).round(3) //integrator control of heating 
+//logger (10,"info", "ZoneTempLocal before integrator ${zoneTempLocal} Local Integrator ${localintegrator} and Local Integrator + ZoneTempLocal = ${zoneTempLocal}")
 
         
         state.acactive = true
@@ -1187,13 +1187,13 @@ def getZoneTemp(){
 
 def integrator(){
 log.info "Starting Generate Integrator"
-if (state.acactive == true){
-log.info "Last run state.integrator ${state.integrator}"
+//if (state.acactive == true){
+//log.info "Last run state.integrator ${state.integrator}"
  def zoneTempLocal = state.zoneTempLocal
  def asp = state.activeSetPoint
  def d
   d = (zoneTempLocal - asp).toFloat()
- d = (d*0.50).round(2)
+/* d = (d*0.50).round(2)
  
  if (d>0.15 || d<-0.15){
  log.info "${d}>0.15 || ${d}<-0.15"
@@ -1218,11 +1218,11 @@ log.info "Last run state.integrator ${state.integrator}"
                         state.integrator=intround
                         log.info "new state.integrator ${state.integrator}"
                        
-                        
-state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")} \n\tIntegrator ${state.integrator}"        
-}else {
-log.info"fan only no chage of state.integrator ${state.integrator}"
-}
+     */                   
+state.endReport = "\n\tsetpoint: ${tempStr(asp)}\n\tend temp: ${tempStr(zoneTempLocal)}\n\tvariance: ${tempStr(d)}\n\tvent levels: ${vents.currentValue("level")}"        
+//}else {
+//log.info"fan only no chage of state.integrator ${state.integrator}"
+//}
 state.acactive = false
 }
 
