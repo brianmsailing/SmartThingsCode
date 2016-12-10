@@ -333,14 +333,14 @@ def reporting(){
 					,state		: null
 					,params		: [rptName:report]
 				)  
-            report = "Integrator"
+          /*  report = "Integrator"
                 href( "report"
 					,title		: report
 					,description: ""
 					,state		: null
 					,params		: [rptName:report]
 				) 
-                
+                */
             }
    }
 }
