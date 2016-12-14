@@ -1094,10 +1094,10 @@ def setRVents(newVo){
     def result = ""
     def changeRequired = false
     if(Rvents){
-	settings.Rvents.each{ vent ->
+	settings.Rvents.each{ Rvents ->
     	def changeMe = false
-		def crntVo = Rvent.currentValue("level").toInteger()
-        def isOff = Rvent.currentValue("switch") == "off"
+		def crntVo = Rvents.currentValue("level").toInteger()
+        def isOff = Rvents.currentValue("switch") == "off"
         /*
         	0 = 0 for sure
         	> 90 = 100, usually
@@ -1123,11 +1123,11 @@ def setRVents(newVo){
         }
         if (changeMe || isOff){
         	changeRequired = true
-        	Rvent.setLevel(newVo)
+        	Rvents.setLevel(newVo)
             state?.Rventcheck=newVo
             runIn(60*1, Rventcheck)
         }
-        log.info("setVents- [${Rvent.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
+        log.info("setVents- [${Rvents.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
     }
     
 
