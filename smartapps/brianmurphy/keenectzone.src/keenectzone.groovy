@@ -1,5 +1,7 @@
  /*
- *V2.4.0 Integrator control *BETA only for heat need to add for cool
+ 
+ *V2.5.0 Beta ecobee climate zone control
+ *V2.4.0 Removed Unstable Integrator control *BETA only for heat need to add for cool
  *V2.3.2 New logic for reduced ouput request from child to parent
  *V2.3.1 Added aditional logic for reduce output in fan only mode
  *V2.3.0 Fix install issue fan set to null
@@ -58,23 +60,23 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	state.vChild = "2.4"
+    state.vChild = "2.5"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.4"
+	state.vChild = "2.5"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
     subscribe(vents, "level", levelHandler)
-    subscribe(zoneControlSwitch,"switch",zoneDisableHandeler)
+    //subscribe(zoneControlSwitch,"switch",zoneDisableHandeler)
     //subscribe(zoneindicateoffsetSwitch,"switch",allzoneoffset)
 	//subscribe(zoneneedoffsetSwitch,"switch",allzoneoffset)
     state.isAC = parent.isAC() //AC enable bits
-   	fetchZoneControlState()
+   	//fetchZoneControlState()
     zoneEvaluate(parent.notifyZone())
 }
 
@@ -83,6 +85,7 @@ def main(){
 	//state.etf = parent.getID()
 	def installed = app.installationState == "COMPLETE"
     state.outputreduction =false
+   
 	return dynamicPage(
     	name		: "main"
         ,title		: "Zone Configuration"
@@ -94,7 +97,7 @@ def main(){
                     ,required	: true
                 )      
         	}
-		    section("Devices"){
+		    section("Devices in Zone"){
                 /*
 				only stock device types work in the list below???
                 ticket submitted, as this should work, and seems to work for everyone except me...
@@ -108,6 +111,7 @@ def main(){
                     ,type			: "capability.switchLevel"
                     ,submitOnChange	: true
 				)
+           
  				input(
             		name		: "tempSensors"
                 	,title		: "Temperature sensor for zone:"
@@ -117,29 +121,8 @@ def main(){
                     ,submitOnChange	: false
             	) 
             }
-            section("Settings"){
-				input(
-            		name			: "minVo"
-                	,title			: "Heat minimum vent opening"
-                	,multiple		: false
-                	,required		: true
-                	,type			: "enum"
-                    ,options		: minVoptions()
-                    ,defaultValue	: "0"
-                    ,submitOnChange	: true
-            	) 
-                if (minVo){
-					input(
-            			name			: "maxVo"
-                		,title			: "Heat maximum vent opening"
-                		,multiple		: false
-                		,required		: true
-                		,type			: "enum"
-                    	,options		: maxVoptions()
-                    	,defaultValue	: "100"
-                    	,submitOnChange	: true
-            		) 
-                }
+            section("Zone Settings"){
+                  
                 input(
                 	name			: "zoneControlType"
                     ,title			: "Temperature control type"
@@ -150,40 +133,6 @@ def main(){
                     ,defaultValue	: "offset"
                     ,submitOnChange	: true
                 )
-                    if (parent.isAC()){
-                    input(
-                        name            : "minVoC"
-                        ,title          : "AC minimum vent opening"
-                        ,multiple       : false
-                        ,required       : false
-                        ,type           : "enum"
-                        ,options        : minVoptions()
-                        ,defaultValue	: "0"
-                        ,submitOnChange : true
-                    ) 
-                    if (minVoC) {
-                        input(
-                            name            : "maxVoC"
-                            ,title          : "AC maximum vent opening"
-                            ,multiple       : false
-                            ,required       : false
-                            ,type           : "enum"
-                            ,options        : maxVCoptions()
-                            ,defaultValue : "100"
-                            ,submitOnChange : true
-                        ) 
-                    }
-                                   		input(
-            		name			: "FanAHC"
-                	,title			: "Fan after heat or AC Vent minimum level"
-                	,multiple       : false
-                    ,required       : false
-                    ,type           : "enum"
-                    ,options        : FANoptions()
-                    ,defaultValue : "100"
-                    ,submitOnChange : true
-            	)
-                }
                 if (zoneControlType == "offset"){
 					input(
             			name			: "heatOffset"
@@ -230,13 +179,92 @@ def main(){
                     		,submitOnChange	: false
                         )
                     }
+                
+    
+        
+           
+        
+	
+                
                 }
+                
+                
+                
+                
+				input(
+            		name			: "minVo"
+                	,title			: "Heating minimum vent opening"
+                	,multiple		: false
+                	,required		: true
+                	,type			: "enum"
+                    ,options		: minVoptions()
+                    ,defaultValue	: "0"
+                    ,submitOnChange	: true
+            	) 
+               
+					input(
+            			name			: "maxVo"
+                		,title			: "Heating maximum vent opening"
+                		,multiple		: false
+                		,required		: true
+                		,type			: "enum"
+                    	,options		: maxVoptions()
+                    	,defaultValue	: "100"
+                    	,submitOnChange	: true
+            		) 
+                
+
+                    if (parent.isAC()){
+                    input(
+                        name            : "minVoC"
+                        ,title          : "Cooling minimum vent opening"
+                        ,multiple       : false
+                        ,required       : false
+                        ,type           : "enum"
+                        ,options        : minVoptions()
+                        ,defaultValue	: "0"
+                        ,submitOnChange : true
+                    ) 
+                   
+                        input(
+                            name            : "maxVoC"
+                            ,title          : "Cooling maximum vent opening"
+                            ,multiple       : false
+                            ,required       : false
+                            ,type           : "enum"
+                            ,options        : maxVCoptions()
+                            ,defaultValue : "100"
+                            ,submitOnChange : true
+                        ) 
+                    }
+                                   		input(
+            		name			: "FanAHC"
+                	,title			: "Vent minimum opening during fan only"
+                	,multiple       : false
+                    ,required       : false
+                    ,type           : "enum"
+                    ,options        : FANoptions()
+                    ,defaultValue : "100"
+                    ,submitOnChange : true
+            	)
+                }
+                  section("Optional Thermostat Zone Control, Ecobee Only"){
+                 def ecobeePrograms = parent.selectProgram()
+          	log.debug "programs: $ecobeePrograms"
+            def ecobeeProgramshold =[["Custom":"Zone enable during hold"],["None":"Zone disabled during hold"]]
+
+     			input "climate1", "enum", title: "Ecobee climate for Zone control", options: ecobeePrograms, required: false
+     			input "climate2", "enum", title: "Additional Ecobee climates", options: ecobeePrograms, required: false
+     			input "climate3", "enum", title: "Additional Ecobee climates", options: ecobeePrograms, required: false
+     			input "climate4", "enum", title: "Additional Ecobee climates", options: ecobeePrograms, required: false
+     			input "climate5", "enum", title: "Thermostat hold zone control", options: ecobeeProgramshold, required: false
+                
             }
             section("Advanced"){
-				def afDesc = "\t" + getTitle("AggressiveTempVentCurve") + "\n\t" + getTitle("ventCloseWait") + "\n\t" + getTitle("zoneControlSwitchSummary") + "\n\t" + getTitle("logLevelSummary") + /*"\n\t" + getTitle("isIntegrator") +*/ "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("pressureControl")
+				def afDesc = "\t" + getTitle("AggressiveTempVentCurve") + "\n\t" + getTitle("ventCloseWait") + "\n\t" /*+ getTitle("zoneControlSwitchSummary")*/ + "\n\t" + getTitle("logLevelSummary") + /*"\n\t" + getTitle("isIntegrator") +*/ "\n\t" + getTitle("sendEventsToNotificationsSummary") + "\n\t" + getTitle("pressureControl")
                 href( "advanced"
                     ,title			: ""
-					,description	: afDesc
+					,description	: "Settings"
 					,state			: null
 				)
             }
@@ -264,7 +292,26 @@ def advanced(){
                     ,submitOnChange	: true
                     ,defaultValue	: false
             	) 
-                
+                         input(
+                    name			: "Rvents"
+                    ,title			: "Return air Keen vents in this zone:"
+                    ,multiple		: true
+                    ,required		: false
+                    //,type			: "device.KeenHomeSmartVent"
+                    ,type			: "capability.switchLevel"
+                    ,submitOnChange	: true
+				)
+                if (Rvents){
+                input(
+            		name			: "Rventsenabled"
+                	,title			: "Return air vents open during zone enabled"
+                	,multiple		: false
+                	,required		: false
+                	,type			: "bool"
+                    ,submitOnChange	: true
+                    ,defaultValue	: false
+            	) 
+                }
             	input(
             		name			: "ventCloseWait"
                     ,title			: getTitle("ventCloseWait")
@@ -339,10 +386,56 @@ def advanced(){
     }
 }
 
+def zoneClimate(ecobeePrograms){
+	log.debug "programs: $ecobeePrograms"
+state.ecobeeprograms= ecobeePrograms
+
+}
+
+
+def zonecontrol(){
+
+state.currentprogram = parent.currentprogram()
+def statehold = state.enabled ?:false
+if (climate1 || climate5){
+    //log.info "currentprogram = ${state.currentprogram}"
+    if(state.currentprogram == climate1 || state.currentprogram == climate2 || state.currentprogram == climate3 || state.currentprogram == climate4|| state.currentprogram == climate5){
+    state.enabled= true
+    state.zoneDisabled = false
+   // log.info "climate enabled ${state.enabled}"
+    }else {
+            state.enabled = false
+            state.zoneDisabled = true
+   // log.info "climate disabled ${state.enabled}"
+       
+    }
+    }else{
+           logger(10,"warn", "Zone is enabled no zone climate selected always enabled")
+     state.enabled= true
+    state.zoneDisabled = false
+    }
+       if (statehold != state.enabled){
+       logger(10,"warn", "Zone is enabled ${state.enabled} via: [${state.currentprogram}]")
+
+    	zoneEvaluate([msg:"zoneSwitch"])
+        }else { //log.info "no change in state"
+        }
+       
+      
+       }
+
+
+
 //zone control methods
 def zoneEvaluate(params){
+zonecontrol()
+//settings.logLevel=40
+ settings.zoneControlSwitch = 40
+
 	state.vChild = "2.4"
 	logger(40,"debug","zoneEvaluate:enter-- parameters: ${params}")
+    
+    
 	if (isIntegrator== false) state?.integrator= 0 
     // variables
     def evaluateVents = false
@@ -358,17 +451,14 @@ def zoneEvaluate(params){
 	def mainOnLocal = state.mainOn  ?: ""
 	def localintegrator = state.integrator.toFloat()
     localintegrator=localintegrator.round(3)
-	//zone states    
-	def zoneDisabledLocal = fetchZoneControlState()
+		
+       def zoneDisabledLocal = state.zoneDisabled
+    //fetchZoneControlState()
     def runningLocal
     
     
     //always fetch these since the zone ownes them
     def zoneTempLocal = tempSensors.currentValue("temperature").toFloat()
-    
-    
-    
-    
     def coolOffsetLocal 
     if (settings.coolOffset) coolOffsetLocal = settings.coolOffset.toInteger()
     def heatOffsetLocal = settings.heatOffset.toInteger()
@@ -546,6 +636,12 @@ def zoneEvaluate(params){
   
     if (evaluateVents){
     def outred = false  
+if (Rvents){
+if (Rventsenabled){
+setRVents(100)
+}else {setRVents(0)}
+
+}
 
     	def slResult = ""
        	if (mainStateLocal == "heat"){
@@ -837,17 +933,17 @@ def levelHandler(evt){
 
 def zoneDisableHandeler(evt){
     logger(40,"debug","zoneDisableHandeler- evt name: ${evt.name}, value: ${evt.value}")
-    def zoneIsEnabled = evt.value == "on"
-    if (zoneControlSwitch){
-    	if (zoneIsEnabled){
-       		logger(10,"warn", "Zone was enabled via: [${zoneControlSwitch.displayName}]")
+    def climateenabled = evt.value == "on"
+   // if (zoneControlSwitch){
+    	if (climateenabled){
+       		logger(10,"warn", "Zone was enabled via: [${state.currentprogram}]")
             state.enabled= true
     	} else {
-       		logger(10,"warn", "Zone was disabled via: [${zoneControlSwitch.displayName}]")
+       		logger(10,"warn", "Zone was disabled via: [${state.currentprogram}]")
             state.enabled = false
     	}
     	zoneEvaluate([msg:"zoneSwitch"])
-    }
+    //}
     logger(40,"debug","zoneDisableHandeler:exit- ")
 }
 
@@ -888,6 +984,7 @@ def closeWithOptions(zoneCloseOption){
 
 def fetchZoneControlState(){
 	logger(40,"debug","fetchZoneControlState:enter- ")
+    
    if (zoneControlSwitch){
     	state.zoneDisabled = zoneControlSwitch.currentValue("switch") == "off"
      	logger (30,"info","A zone control switch is selected and zoneDisabled is: ${state.zoneDisabled}")
@@ -990,6 +1087,64 @@ def newVo=state.ventcheck
 setVents(newVo)
 }
 }
+
+def setRVents(newVo){
+	logger(40,"debug","setRVents:enter- ")
+	logger(30,"warn","setRVents- newVo: ${newVo}")
+    def result = ""
+    def changeRequired = false
+    if(Rvents){
+	settings.Rvents.each{ vent ->
+    	def changeMe = false
+		def crntVo = Rvent.currentValue("level").toInteger()
+        def isOff = Rvent.currentValue("switch") == "off"
+        /*
+        	0 = 0 for sure
+        	> 90 = 100, usually
+        	the remainder is a crap shoot
+            0 == switch == "off"
+            > 0 == switch == "on"
+            establish an arbitrary +/- threshold
+            if currentLevel is +/- 5 of requested level, call it good
+            otherwise reset it
+		*/
+        if (newVo != crntVo){
+        	def lB = crntVo - 5    
+            
+            //92-6 
+            def uB = crntVo + 10
+        	if (newVo == 100 && crntVo < 90){
+            	//logger(10,"info","newVo == 100 && crntVo < 90: ${newVo == 100 && crntVo < 90}")
+            	changeMe = true
+            } else if ((newVo < lB || newVo > uB) && newVo != 100){
+            	//logger(10,"info","newVo < lB || newVo > uB && newVo != 100: ${(newVo < lB || newVo > uB) && newVo != 100}")
+            	changeMe = true
+            }
+        }
+        if (changeMe || isOff){
+        	changeRequired = true
+        	Rvent.setLevel(newVo)
+            state?.Rventcheck=newVo
+            runIn(60*1, Rventcheck)
+        }
+        log.info("setVents- [${Rvent.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
+    }
+    
+
+    if (changeRequired) result = ", setting Rvents to ${newVo}"
+    else result = ", vents at ${newVo}"
+ 	return result
+    logger(40,"debug","setRVents:exit- ")
+    }
+}
+
+def Rventcheck(){
+if (state.enabled == true){
+def newVo=state.Rventcheck
+setRVents(newVo)
+}
+}
+
 
 def delayClose(){
     setVents(0)
@@ -1144,7 +1299,7 @@ def getZoneConfig(){
     else hspStr = "heating offset: ${tempStr(settings.heatOffset)}"
     
     def zt = hspStr + cspStr
-    if (zoneControlSwitch) zc = "is ${zoneControlSwitch.currentValue("switch")} via [${zoneControlSwitch.displayName}]"
+    //if (zoneControlSwitch) zc = "is ${zoneControlSwitch.currentValue("switch")} via [${zoneControlSwitch.displayName}]"
 	return "\n\tVents: ${vents}\n\ttemp sensor: [${tempSensors}]\n\tminimum vent opening: ${minVo}%\n\tmaximum vent opening: ${maxVo}%\n\t${zt}\n\tzone control: ${zc}"
 }
 
