@@ -1,5 +1,5 @@
 /**
- *  V2.2.0 BETA Ecobee Climate Zone control
+ *  V2.5.0 BETA Ecobee Climate Zone control
  * 	V2.1.0 Removed Unstable Integrator Control 
  *  V2.0.9 Heat and AC indicator logic updated
  *  V2.0.8 Ac now set as heat for non ac appliations
@@ -55,7 +55,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.2.0"
+	state.vParent = "2.5.0"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -103,7 +103,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
-state.vParent = "2.2.0"
+state.vParent = "2.5.0"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"
