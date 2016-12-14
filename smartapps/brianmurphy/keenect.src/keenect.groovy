@@ -525,14 +525,14 @@ def checkNotify(evt){
 ACind.on()
 }
 
-ReturnVents.setLevel(0)
+//ReturnVents.setLevel(0)
     }
     if(mainState == "heat"){
 if(indicators){
     Heatind.on()
     }
          if(state.night == false){
-       ReturnVents.setLevel(100)
+       //ReturnVents.setLevel(100)
         }
     }
     if(mainState == "fan only"){
@@ -543,7 +543,7 @@ if(indicators){
     }
         if(state.cool == false){
  if(state.night == false){
-       ReturnVents.setLevel(100)
+     //  ReturnVents.setLevel(100)
         }
        }
       
