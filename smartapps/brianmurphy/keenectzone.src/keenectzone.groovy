@@ -398,27 +398,27 @@ def zonecontrol(){
 state.currentprogram = parent.currentprogram()
 def statehold = state.enabled ?:false
 if (climate1 || climate5){
-    //log.info "currentprogram = ${state.currentprogram}"
+    log.info "currentprogram = ${state.currentprogram}"
     if(state.currentprogram == climate1 || state.currentprogram == climate2 || state.currentprogram == climate3 || state.currentprogram == climate4|| state.currentprogram == climate5){
     state.enabled= true
     state.zoneDisabled = false
-   // log.info "climate enabled ${state.enabled}"
+    log.info "climate enabled ${state.enabled}"
     }else {
             state.enabled = false
             state.zoneDisabled = true
-   // log.info "climate disabled ${state.enabled}"
+    log.info "climate disabled ${state.enabled}"
        
     }
     }else{
-           logger(10,"warn", "Zone is enabled no zone climate selected always enabled")
+           log.info "Zone is enabled no zone climate selected always enabled"
      state.enabled= true
     state.zoneDisabled = false
     }
        if (statehold != state.enabled){
-       logger(10,"warn", "Zone is enabled ${state.enabled} via: [${state.currentprogram}]")
+       log.info "Zone is enabled ${state.enabled} via: [${state.currentprogram}]"
 
     	zoneEvaluate([msg:"zoneSwitch"])
-        }else { //log.info "no change in state"
+        }else { log.info "no change in state"
         }
        
       
@@ -1050,10 +1050,10 @@ def setVents(newVo){
             otherwise reset it
 		*/
         if (newVo != crntVo){
-        	def lB = crntVo - 9    
+        	def lB = crntVo - 10    
             
             //92-6 
-            def uB = crntVo + 9
+            def uB = crntVo + 10
         	if (newVo == 100 && crntVo < 90){
             	//logger(10,"info","newVo == 100 && crntVo < 90: ${newVo == 100 && crntVo < 90}")
             	changeMe = true

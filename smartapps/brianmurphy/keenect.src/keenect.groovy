@@ -810,18 +810,18 @@ def getTitle(name){
     return title
 }
 def currentprogram(none){
-log.debug "${none}"
+//log.debug "${none}"
 def ecobeePrograms = tStat.currentprogramNameForUI.toString().minus('[').minus(']')
-	log.info "programs: ${ecobeePrograms}"
+//	log.info "programs: ${ecobeePrograms}"
 
 
 return (ecobeePrograms)
 }
 
 def selectProgram(none) {
-log.debug "${none}"
+//log.debug "${none}"
 	def ecobeePrograms = tStat.currentClimateList.toString().minus('[').minus(']').tokenize(',')
-	log.debug "programs: $ecobeePrograms"
+	//log.debug "programs: $ecobeePrograms"
     //childApps.each {child ->
     //	child.zoneClimate(ecobeePrograms)
     
