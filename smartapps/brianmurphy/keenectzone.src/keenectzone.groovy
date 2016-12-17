@@ -322,14 +322,14 @@ def advanced(){
                 	,submitOnChange	: true
                    	,defaultValue	: "-1"
             	)
-                input(
+              /*  input(
             		name			: "zoneControlSwitch"
                 	,title			: getTitle("zoneControlSwitch") 
                 	,multiple		: false
                 	,required		: false
                 	,type			: "capability.switch"
                     ,submitOnChange	: true
-                )
+                )*/
                    
          		input(
             		name			: "logLevel"
@@ -1211,7 +1211,7 @@ def minVoptions(){
 }
 def maxVCoptions(){
     def opts = []
-    def start = minVoC.toInteger() + 5
+    def start = 0
     start.step 95, 5, {
         opts.push(["${it}":"${it}%"])
     }
@@ -1220,7 +1220,7 @@ def maxVCoptions(){
 }
 def maxVoptions(){
 	def opts = []
-    def start = minVo.toInteger() + 5
+    def start = 0
     start.step 95, 5, {
    		opts.push(["${it}":"${it}%"])
 	}
