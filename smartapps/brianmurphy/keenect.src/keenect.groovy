@@ -1,4 +1,5 @@
 /**
+ *  V2.5.1 Fixed missing indicator issue
  *  V2.5.0 BETA Ecobee Climate Zone control
  * 	V2.1.0 Removed Unstable Integrator Control 
  *  V2.0.9 Heat and AC indicator logic updated
@@ -55,7 +56,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.5.0"
+	state.vParent = "2.5.1"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -103,7 +104,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
-state.vParent = "2.5.0"
+state.vParent = "2.5.1"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"
@@ -674,7 +675,9 @@ logger (30,"info", "nor ${nor}")
 
 def ChildNormalOutput(){
  state.reduceoutput = false
+ if(outputreductionind){
  outputreductionind.setLevel(90)
+ }
 logger (30,"info", "PARENT Ouput Reduction Off")
    childApps.each {child ->
     	child.allzoneoffset(false)}
@@ -683,7 +686,9 @@ logger (30,"info", "PARENT Ouput Reduction Off")
 
 def ChildReduceOutput(){
 logger (30,"info","PARENT Output Reduction On")
+if(outputreductionind){
 outputreductionind.setLevel(15)
+}
   runIn (125, ChildNormalOutput)
         state.ouputflag = false
    childApps.each {child ->

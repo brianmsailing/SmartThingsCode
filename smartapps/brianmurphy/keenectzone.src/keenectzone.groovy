@@ -825,7 +825,7 @@ state.acactive = true
             // log.info "${state.mainMode}"
              if (state.mainMode == "heat"){
              //log.info "heat"
-             VoLocal=Math.round(((zoneTempLocal - zoneHSPLocal)+(0.75))*55)
+             VoLocal=Math.round(((zoneTempLocal - zoneHSPLocal)+(0.1))*70)
              }
              if (state.mainMode == "cool"){
              VoLocal=Math.round(((zoneCSPLocal - zoneTempLocal)+0.2)*150)
