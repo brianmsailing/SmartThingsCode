@@ -459,9 +459,10 @@ zonecontrol()
     
     //always fetch these since the zone ownes them
     def zoneTempLocal = tempSensors.currentValue("temperature").toFloat()
-    def coolOffsetLocal 
+    def coolOffsetLocal = 0
     if (settings.coolOffset) coolOffsetLocal = settings.coolOffset.toInteger()
-    def heatOffsetLocal = settings.heatOffset.toInteger()
+    def heatOffsetLocal = 0
+    if(settings.heatOffset) heatOffsetLocal = settings.heatOffset.toInteger()
     def zoneCloseOption = -1
     if (settings.ventCloseWait) zoneCloseOption = settings.ventCloseWait.toInteger()
     
@@ -507,7 +508,7 @@ zonecontrol()
     def zoneHSPLocal = mainHSPLocal + heatOffsetLocal
     if (settings.zoneControlType == "fixed"){
     	if (mainCSPLocal && settings.staticCSP)	zoneCSPLocal = settings.staticCSP.toInteger()
-        zoneHSPLocal = settings.staticHSP.toInteger()
+        if (mainHSPLocal && settings.staticHSP) zoneHSPLocal = settings.staticHSP.toInteger()
     }
     
     switch (msg){
@@ -548,11 +549,11 @@ zonecontrol()
                 
                 //always update data
                 
-                mainStateLocal = data.mainState
-                mainModeLocal = data.mainMode
-                mainHSPLocal = data.mainHSP
-                mainCSPLocal = data.mainCSP
-                mainOnLocal = data.mainOn
+                mainStateLocal = data?.mainState ?: ""
+                mainModeLocal = data?.mainMode ?: ""
+                mainHSPLocal = data?.mainHSP ?: 0
+                mainCSPLocal = data?.mainCSP ?: 0
+                mainOnLocal = data?.mainOn ?: ""
                 //set it again here, or rather ignore if type is fixed...
                 if (zoneControlType == "offset"){
               zoneCSPLocal =  (mainCSPLocal + coolOffsetLocal)
