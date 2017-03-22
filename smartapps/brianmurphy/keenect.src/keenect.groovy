@@ -1,4 +1,5 @@
 /**
+*	V2.6.0 equipment status for humidifier need to add cooling modes to oses
  *  V2.5.1 Fixed missing indicator issue
  *  V2.5.0 BETA Ecobee Climate Zone control
  * 	V2.1.0 Removed Unstable Integrator Control 
@@ -63,6 +64,8 @@ def initialize() {
     subscribe(tStat, "thermostatMode", checkNotify)
     subscribe(tStat, "thermostatFanMode", checkNotify)
     subscribe(tStat, "thermostatOperatingState", checkNotify)
+    subscribe(tStat, "equipmentStatus", checkNotify)
+
     subscribe(tStat, "heatingSetpoint", checkNotify)
     subscribe(tStat, "coolingSetpoint", checkNotify)
     //tempSensors
@@ -428,6 +431,8 @@ def getReport(rptName){
 def checkNotify(evt){
     logger(40,"debug","checkNotify:enter- ")
 	def tempStr = ''
+   
+    def mainES =''
     def tempFloat = 0.0
     def tempBool = false
     def isSetback = false
@@ -437,6 +442,9 @@ def checkNotify(evt){
 	
     //thermostat state
 	tempStr = getNormalizedOS(tStat.currentValue("thermostatOperatingState"))
+   	mainES = getNormalizedOSES(tStat.currentValue("equipmentStatus"))
+    state.mainES = mainES
+ logger(10,"info","mainequipmentStatus: ${mainES}")
 	def mainState = state.mainState
     def mainStateChange = mainState != tempStr
     mainState = tempStr
@@ -572,7 +580,7 @@ if(indicators){
     } 
     
     if (mainStateChange || mainModeChange || mainCSPChange || mainHSPChange){
-    	def dataSet = [msg:"stat",data:[initRequest:false,mainState:mainState,mainStateChange:mainStateChange,mainMode:mainMode,mainModeChange:mainModeChange,mainCSP:mainCSP,mainCSPChange:mainCSPChange,mainHSP:mainHSP,mainHSPChange:mainHSPChange,mainOn:mainOn]]
+    	def dataSet = [msg:"stat",data:[initRequest:false,mainState:mainState,mainStateChange:mainStateChange,mainMode:mainMode,mainModeChange:mainModeChange,mainCSP:mainCSP,mainCSPChange:mainCSPChange,mainHSP:mainHSP,mainHSPChange:mainHSPChange,mainOn:mainOn,mainES:mainES]]
         if (dataSet == state.dataSet){
         	//dup dataset..., should never ever happen
             logger(30,"warn","duplicate dataset, zones will not be notified... dataSet: ${state.dataSet}")
@@ -601,13 +609,14 @@ def notifyZone(){
 	//initial data request for new zone
     logger(10,"info", "Zone notification now")
     def mainState = getNormalizedOS(tStat.currentValue("thermostatOperatingState"))
+    def mainES = getNormalizedOSES(tStat.currentValue("equipmentStatus"))
     def mainMode = getNormalizedOS(tStat.currentValue("thermostatMode"))
     def mainCSP 
     if (isAC()) mainCSP = tStat.currentValue("coolingSetpoint").toFloat()
     def mainHSP = tStat.currentValue("heatingSetpoint").toFloat()
     def mainOn = mainState != "idle"
-	def dataSet = [msg:"stat",data:[initRequest:true,mainState:mainState,mainMode:mainMode,mainCSP:mainCSP,mainHSP:mainHSP,mainOn:mainOn]]
-    logger(40,"debug","notifyZone:enter- map:${dataSet}")
+	def dataSet = [msg:"stat",data:[initRequest:true,mainState:mainState,mainMode:mainMode,mainCSP:mainCSP,mainHSP:mainHSP,mainOn:mainOn,mainES:mainES]]
+    logger(10,"debug","notifyZone:enter- map:${dataSet}")
     return dataSet
 }
 
@@ -689,7 +698,7 @@ logger (30,"info","PARENT Output Reduction On")
 if(outputreductionind){
 outputreductionind.setLevel(15)
 }
-  runIn (125, ChildNormalOutput)
+  runIn (65, ChildNormalOutput)
         state.ouputflag = false
    childApps.each {child ->
     	child.allzoneoffset(true)}
@@ -715,6 +724,29 @@ def getNormalizedOS(os){
     }
     return normOS
 }
+// add more for cooling
+def getNormalizedOSES(os){
+	def normOS = ""
+    if (os == "fan,humidifier running" || os == "auxHeat1,humidifier running"){
+    	normOS = "humidifier"
+       }else if (os == "auxHeat1,fan running" || os == "auxHeat1" || os == "auxHeat1 running" || os == "emergency heat"){
+    	normOS = "heat"
+       } else if (os == "fan running"){
+    	normOS = "fan only"  
+        
+    } else if (os == "cooling" || os == "pending cool" || os == "cool"){
+    	normOS = "cool"
+    } else if (os == "	auxHeat1 running"){
+    	normOS = "heat"
+    } else if (os == "off"){
+    	normOS = "off"
+    } else {
+    	normOS = "idle"
+    }
+    return normOS
+}
+
+
 
 def getVersionInfo(){
 	return "Versions:\n\tKeenect: ${state.vParent ?: "No data available yet."}\n\tkeenectZone: ${state.vChild ?: "No data available yet."}"

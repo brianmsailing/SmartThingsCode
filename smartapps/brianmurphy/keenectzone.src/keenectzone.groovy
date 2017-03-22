@@ -1,5 +1,6 @@
  /*
- 
+ *V2.7.0 Fix for cooling vent opeing min and max error
+ *V2.6.0 Stable ecobee climate zone control and added better control of fan on and heat or cool run.
  *V2.5.0 Beta ecobee climate zone control
  *V2.4.0 Removed Unstable Integrator control *BETA only for heat need to add for cool
  *V2.3.2 New logic for reduced ouput request from child to parent
@@ -60,14 +61,14 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-    state.vChild = "2.5"
+    state.vChild = "2.7"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.5"
+	state.vChild = "2.7"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
@@ -443,7 +444,7 @@ zonecontrol()
     def msg = params.msg
     def data = params.data
     //main states
-      
+      def mainES = state.mainES ?:""
     def mainStateLocal = state.mainState ?: ""
     def mainModeLocal = state.mainMode ?: ""
 	def mainHSPLocal = state.mainHSP  ?: 0
@@ -468,8 +469,13 @@ zonecontrol()
     def minVoLocal = settings.minVo.toInteger() 
     def maxVoLocal = settings.maxVo.toInteger()
      if (parent.isAC()){
-     def minVoCLocal = settings.minVoC.toInteger() 
+                 logger(10,"info","is ac")
+
+     def minVoCLocal = settings.minVoC.toInteger()
     def maxVoCLocal = settings.maxVoC.toInteger()
+         //       logger(10,"warn","max: ${maxVoCLocal}%")
+        //    logger(10,"warn","min: ${minVoCLocal}%")
+
     }
    // def fanVoLocal = settings.FanVoC.toInteger()
     def fanAHLocal = settings.FanAHC.toInteger()
@@ -524,6 +530,7 @@ zonecontrol()
                 	//system start up
                 	if (data.mainOn && !zoneDisabledLocal){
                         evaluateVents = true
+                        state.fanonly2 = false
                         logger(30,"info","zoneEvaluate- system start up, evaluate: ${evaluateVents}")
                         logger(10,"info","Main HVAC is on and ${data.mainState}ing")
                     //system shut down
@@ -547,7 +554,7 @@ zonecontrol()
                 }
                 
                 //always update data
-                
+                mainES = data.mainES
                 mainStateLocal = data.mainState
                 mainModeLocal = data.mainMode
                 mainHSPLocal = data.mainHSP
@@ -623,6 +630,7 @@ zonecontrol()
    
     
     //write state
+    state.mainES = mainES
     state.mainState = mainStateLocal
     state.mainMode = mainModeLocal
 	state.mainHSP = mainHSPLocal
@@ -744,19 +752,19 @@ state.activeSetPoint = zoneCSPLocal
 state.zoneneedofset = false
 state.parentneedoffset = false
 state.acactive = true
-             if (zoneTempLocal > zoneCSPLocal-1.4){
+             if (zoneTempLocal > zoneCSPLocal+1.4){
             state.zoneneedofset = true
             logger(10,"info","CHILD zone needs offset")
             }
-                 if (zoneTempLocal > zoneCSPLocal-1.7){
+                 if (zoneTempLocal > zoneCSPLocal+1.7){
             state.parentneedoffset = true
             logger(10,"info","Parent needs offset")
             }
-            if (zoneTempLocal < zoneCSPLocal-1.4) {
+            if (zoneTempLocal < zoneCSPLocal+1.4) {
              state.zoneneedofset = false
              logger(10,"info","CHILD zone dose not need offset")
              }
-                        if (zoneTempLocal < zoneCSPLocal-1.7) {
+                        if (zoneTempLocal < zoneCSPLocal+1.7) {
              state.parentneedoffset = false
              logger(10,"info","Parentdose not need offset")
              }
@@ -771,14 +779,17 @@ state.acactive = true
           	} else {
                     if (state.AggressiveTempVentCurveActive) {
                      VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal)+ 0.2 )*300)
-                       logger(30,"info","MM >3 QR Vent request level ${VoLocal}")
-                     if (VoLocal<=40){
+                                                                logger(10,"info","agressive normal level ${VoLocal}")
+
+                    if (VoLocal<=40){
           		  VoLocal=40
                      }
 
 
                     } else {
                      VoLocal=Math.round(((zoneTempLocal - zoneCSPLocal)+0.2)*150)
+                                            logger(10,"info"," normal level ${VoLocal}")
+
                      }
                    
                  
@@ -799,13 +810,17 @@ state.acactive = true
                   log.info"output reduction for this zone needed ${VoLocal}"
                   }
                   }
-                   	
-                    
+
+     def minVoCLocal = settings.minVoC.toInteger()
+    def maxVoCLocal = settings.maxVoC.toInteger()
                     if (VoLocal >= maxVoCLocal){
                         VoLocal = maxVoCLocal}
-                        
+   logger(10,"info"," 2 max vo level ${maxVoCLocal}")
+
                         if (outred == false){
                         if (VoLocal <= minVoCLocal){
+                           logger(10,"info","2 min vo level ${minVoCLocal}")
+
                         VoLocal = minVoCLocal
                         log.info"vent at min VoLocal ${VoLocal}"}
                         }
@@ -815,11 +830,14 @@ state.acactive = true
                          if (VoLocal< 0){
           		 			 VoLocal = 0}
             		slResult = setVents(VoLocal)
+                                       logger (10,"info", "humidifier state ${state.mainES}")
+
 					logger(10,"info", "CHILD zone temp is ${tempStr(zoneTempLocal)}, cooling setpoint of ${tempStr(zoneCSPLocal)} is not met${slResult} output reduction ${outred}")
 					runningLocal = true
             }   
             
         }else if (mainStateLocal == "fan only"){
+       logger (10,"info", "humidifier state ${state.mainES}")
         logger(30,"info","volocal entering fan only ${VoLocal}")
              if (state.acactive == false) {
             // log.info "${state.mainMode}"
@@ -835,18 +853,22 @@ state.acactive = true
                          if (VoLocal< 0){
           		 			 VoLocal = 0}
             // VoLocal = fanVoLocal
-            logger(10,"info","fan only fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
+            logger(10,"info","Fan Only fan on open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             }
             
             
             
             if (state.acactive == true) {
+if (state.fanonly2 == false){
+runIn(60*2,fanonly)
+state.fanonly2 = true
+}
                // if (VoLocal <30){
                // VoLocal = 30}
                if (VoLocal < fanAHLocal){
                VoLocal = fanAHLocal
                    }
-            logger(10,"info","fan on after heat or AC, open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
+            logger(10,"info","Fan on after Heat or AC, open vents to ${VoLocal}, mainState: ${mainStateLocal}, zoneTemp: ${zoneTempLocal}, zoneHSP: ${zoneHSPLocal}, zoneCSP: ${zoneCSPLocal}, state active ${state.acactive}")
             state.fanonly =true
             } 
         setVents(VoLocal)
@@ -1028,6 +1050,13 @@ def logger(displayLevel,errorLevel,text){
         }
     }
  }
+
+def fanonly(){
+state.acactive = false
+	logger(10,"info","set vents to fan only after 2min timeout for heat or ac afterfan run")
+
+}
+
 
 def setVents(newVo){
 	logger(40,"debug","setVents:enter- ")
