@@ -1,5 +1,6 @@
 /**
-*	V2.6.0 equipment status for humidifier need to add cooling modes to oses
+ *	V2.7.0 Add humidifer fan control feature
+ *	V2.6.0 equipment status for humidifier 
  *  V2.5.1 Fixed missing indicator issue
  *  V2.5.0 BETA Ecobee Climate Zone control
  * 	V2.1.0 Removed Unstable Integrator Control 
@@ -57,7 +58,7 @@ def updated() {
 }
 
 def initialize() {
-	state.vParent = "2.5.1"
+	state.vParent = "2.7"
 	state.etf = app.id == '07d1abe4-352f-441e-a6bd-681929b217e4' //5
 	
     //subscribe(tStat, "thermostatSetpoint", notifyZones) doesn't look like we need to use this
@@ -107,7 +108,7 @@ def nighthandler(evt){
 }
 /* page methods	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 def main(){
-state.vParent = "2.5.1"
+state.vParent = "2.7"
 	def installed = app.installationState == "COMPLETE"
 	return dynamicPage(
     	name		: "main"
@@ -431,8 +432,6 @@ def getReport(rptName){
 def checkNotify(evt){
     logger(40,"debug","checkNotify:enter- ")
 	def tempStr = ''
-   
-    def mainES =''
     def tempFloat = 0.0
     def tempBool = false
     def isSetback = false
@@ -442,15 +441,20 @@ def checkNotify(evt){
 	
     //thermostat state
 	tempStr = getNormalizedOS(tStat.currentValue("thermostatOperatingState"))
-   	mainES = getNormalizedOSES(tStat.currentValue("equipmentStatus"))
-    state.mainES = mainES
- logger(10,"info","mainequipmentStatus: ${mainES}")
 	def mainState = state.mainState
     def mainStateChange = mainState != tempStr
     mainState = tempStr
     logger(40,"info","checkNotify- mainState: ${mainState}, mainStateChange: ${mainStateChange}")
        // state.mainFan = state.mainFan ?: tStat.currentValue("thermostatFanMode")
         
+      // thermostat equipment state
+      
+   tempStr = getNormalizedOSES(tStat.currentValue("equipmentStatus"))
+   def mainES = state.mainES
+   def mainESChange = mainES != tempStr
+   mainES = tempStr
+            logger(40,"info","checkNotify- mainequipmentStatus: ${mainES}, mainequipmentStatusChange: ${mainESChange}")
+
         //thermostat fan
         
 	tempStr = tStat.currentValue("thermostatFanMode")
@@ -504,6 +508,7 @@ def checkNotify(evt){
     logger(40,"info","checkNotify- mainState: ${mainState}")
   logger(40,"info","checkNotify- mainOn: ${mainOn}")
     //always update state vars
+    state.mainES =mainES
     state.mainState = mainState
     state.mainFan = mainFan
     state.mainMode = mainMode
@@ -579,7 +584,7 @@ if(indicators){
         logger(10,"info","write log info cycle ended")
     } 
     
-    if (mainStateChange || mainModeChange || mainCSPChange || mainHSPChange){
+    if (mainStateChange || mainModeChange || mainCSPChange || mainHSPChange ||mainESChange){
     	def dataSet = [msg:"stat",data:[initRequest:false,mainState:mainState,mainStateChange:mainStateChange,mainMode:mainMode,mainModeChange:mainModeChange,mainCSP:mainCSP,mainCSPChange:mainCSPChange,mainHSP:mainHSP,mainHSPChange:mainHSPChange,mainOn:mainOn,mainES:mainES]]
         if (dataSet == state.dataSet){
         	//dup dataset..., should never ever happen
@@ -590,6 +595,7 @@ if(indicators){
         	if (mainModeChange) logger(10,"info","Main HVAC mode changed to: ${mainMode}")
         	if (mainCSPChange && isAC()) logger(10,"info","Main HVAC cooling setpoint changed to: ${mainCSP}")
         	if (mainHSPChange) logger(10,"info","Main HVAC heating setpoint changed to: ${mainHSP}")
+            if (mainESChannge) logger(10,"info","Main HVAC equipment status changed to: ${mainES}")
             state.dataSet = dataSet
             if (delay > 0 && mainState == "idle"){
 				logger(10,"info", "Mainstate ${mainState}")
@@ -727,17 +733,15 @@ def getNormalizedOS(os){
 // add more for cooling
 def getNormalizedOSES(os){
 	def normOS = ""
-    if (os == "fan,humidifier running" || os == "auxHeat1,humidifier running"){
+    if (os == "fan,humidifier running"){
     	normOS = "humidifier"
-       }else if (os == "auxHeat1,fan running" || os == "auxHeat1" || os == "auxHeat1 running" || os == "emergency heat"){
+       }else if (os == "auxHeat1,fan running" || os == "auxHeat1"|| os == "auxHeat1,humidifier running"	|| os == "auxHeat1 running" || os == "emergency heat" || os =="auxHeat1,fan,humidifier running"	 ){
     	normOS = "heat"
        } else if (os == "fan running"){
     	normOS = "fan only"  
         
     } else if (os == "cooling" || os == "pending cool" || os == "cool"){
     	normOS = "cool"
-    } else if (os == "	auxHeat1 running"){
-    	normOS = "heat"
     } else if (os == "off"){
     	normOS = "off"
     } else {
