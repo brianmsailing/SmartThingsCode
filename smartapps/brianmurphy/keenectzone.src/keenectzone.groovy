@@ -1,4 +1,5 @@
  /*
+ *V2.8.1 fix for vent open min at cooling
  *V2.8.0 Humidifier fan vent control
  *V2.7.0 Fix for cooling vent opeing min and max error
  *V2.6.0 Stable ecobee climate zone control and added better control of fan on and heat or cool run.
@@ -62,14 +63,14 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-    state.vChild = "2.8"
+    state.vChild = "2.8.1"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.8"
+	state.vChild = "2.8.1"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
@@ -748,11 +749,14 @@ state.parentneedoffset = false
             }   
            	
         } else if (mainStateLocal == "cool"){
+        
 log.info "CHILD evaluateVents Cooling"
 state.activeSetPoint = zoneCSPLocal
 state.zoneneedofset = false
 state.parentneedoffset = false
 state.acactive = true
+    def minVoCLocal = settings.minVoC.toInteger()
+    def maxVoCLocal = settings.maxVoC.toInteger()
              if (zoneTempLocal > zoneCSPLocal+1.4){
             state.zoneneedofset = true
             logger(10,"info","CHILD zone needs offset")
@@ -812,8 +816,7 @@ state.acactive = true
                   }
                   }
 
-     def minVoCLocal = settings.minVoC.toInteger()
-    def maxVoCLocal = settings.maxVoC.toInteger()
+ 
                     if (VoLocal >= maxVoCLocal){
                         VoLocal = maxVoCLocal}
    //logger(10,"info"," 2 max vo level ${maxVoCLocal}")
