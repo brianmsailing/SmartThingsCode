@@ -1,4 +1,5 @@
  /*
+ *V2.8.2 set default value for return air vents to false
  *V2.8.1 fix for vent open min at cooling
  *V2.8.0 Humidifier fan vent control
  *V2.7.0 Fix for cooling vent opeing min and max error
@@ -63,14 +64,14 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-    state.vChild = "2.8.1"
+    state.vChild = "2.8.2"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.8.1"
+	state.vChild = "2.8.2"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
@@ -302,6 +303,7 @@ def advanced(){
                     //,type			: "device.KeenHomeSmartVent"
                     ,type			: "capability.switchLevel"
                     ,submitOnChange	: true
+                    ,defaultValue 	: false
 				)
                 if (Rvents){
                 input(
