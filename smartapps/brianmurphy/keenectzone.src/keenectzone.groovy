@@ -111,7 +111,6 @@ def main(){
                     ,title			: "Keen vents in this zone:"
                     ,multiple		: true
                     ,required		: true
-                    //,type			: "device.KeenHomeSmartVent"
                     ,type			: "capability.switchLevel"
                     ,submitOnChange	: true
 				)
@@ -296,16 +295,13 @@ def advanced(){
                     ,defaultValue	: false
             	) 
                          input(
-                    name			: "Rvents"
+                    name			: "Rvents2"
                     ,title			: "Return air Keen vents in this zone:"
                     ,multiple		: true
                     ,required		: false
-                    //,type			: "device.KeenHomeSmartVent"
                     ,type			: "capability.switchLevel"
                     ,submitOnChange	: true
-                    ,defaultValue 	: false
 				)
-                if (Rvents){
                 input(
             		name			: "Rventsenabled"
                 	,title			: "Return air vents open during zone enabled"
@@ -314,8 +310,8 @@ def advanced(){
                 	,type			: "bool"
                     ,submitOnChange	: true
                     ,defaultValue	: false
-            	) 
-                }
+          
+                )
             	input(
             		name			: "ventCloseWait"
                     ,title			: getTitle("ventCloseWait")
@@ -648,11 +644,10 @@ zonecontrol()
   
     if (evaluateVents){
     def outred = false  
-if (Rvents){
+if (Rvents2){
 if (Rventsenabled){
 setRVents(100)
 }else {setRVents(0)}
-
 }
 
     	def slResult = ""
@@ -1147,11 +1142,11 @@ def setRVents(newVo){
 	logger(30,"warn","setRVents- newVo: ${newVo}")
     def result = ""
     def changeRequired = false
-    if(Rvents){
-	settings.Rvents.each{ Rvents ->
+    if(Rvents2){
+	settings.Rvents2.each{ Rvent2 ->
     	def changeMe = false
-		def crntVo = Rvents.currentValue("level").toInteger()
-        def isOff = Rvents.currentValue("switch") == "off"
+		def crntVo = Rvent2.currentValue("level").toInteger()
+        def isOff = Rvent.currentValue("switch") == "off"
         /*
         	0 = 0 for sure
         	> 90 = 100, usually
@@ -1177,7 +1172,7 @@ def setRVents(newVo){
         }
         if (changeMe || isOff){
         	changeRequired = true
-        	Rvents.setLevel(newVo)
+        	Rvents2.setLevel(newVo)
             state?.Rventcheck=newVo
             runIn(60*1, Rventcheck)
         }
