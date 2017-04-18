@@ -644,8 +644,8 @@ zonecontrol()
   
     if (evaluateVents){
     def outred = false  
-if (Rvents2){
-if (Rventsenabled){
+if (Rvents2== true){
+if (Rventsenabled== true){
 setRVents(100)
 }else {setRVents(0)}
 }
@@ -1146,7 +1146,7 @@ def setRVents(newVo){
 	settings.Rvents2.each{ Rvent2 ->
     	def changeMe = false
 		def crntVo = Rvent2.currentValue("level").toInteger()
-        def isOff = Rvent.currentValue("switch") == "off"
+        def isOff = Rvent2.currentValue("switch") == "off"
         /*
         	0 = 0 for sure
         	> 90 = 100, usually
@@ -1171,10 +1171,15 @@ def setRVents(newVo){
             }
         }
         if (changeMe || isOff){
+        if (Rvents2){
+            logger(10,"warn","rvents true")
+
+
         	changeRequired = true
         	Rvents2.setLevel(newVo)
-            state?.Rventcheck=newVo
+            state.Rventcheck=newVo
             runIn(60*1, Rventcheck)
+            }
         }
         log.info("setVents- [${Rvents.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
     }
