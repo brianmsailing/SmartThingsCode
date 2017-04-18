@@ -1,4 +1,5 @@
  /*
+ *V2.8.3 bug fix for return air vents
  *V2.8.2 set default value for return air vents to false
  *V2.8.1 fix for vent open min at cooling
  *V2.8.0 Humidifier fan vent control
@@ -64,14 +65,14 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-    state.vChild = "2.8.2"
+    state.vChild = "2.8.3"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.8.2"
+	state.vChild = "2.8.3"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
