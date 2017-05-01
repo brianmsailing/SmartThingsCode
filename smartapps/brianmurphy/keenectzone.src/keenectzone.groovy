@@ -1,4 +1,5 @@
  /*
+ *V2.8.4 bug fix for vent name setup error
  *V2.8.3 bug fix for return air vents
  *V2.8.2 set default value for return air vents to false
  *V2.8.1 fix for vent open min at cooling
@@ -65,14 +66,14 @@ state.acactive = false
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-    state.vChild = "2.8.3"
+    state.vChild = "2.8.4"
     unsubscribe()
 	initialize()
     
 }
 
 def initialize() {
-	state.vChild = "2.8.3"
+	state.vChild = "2.8.4"
    // state?.integrator= 0 
     parent.updateVer(state.vChild)
     subscribe(tempSensors, "temperature", tempHandler)
@@ -647,10 +648,14 @@ zonecontrol()
     def outred = false  
 if (Rvents2== true){
 if (Rventsenabled== true){
+if (mainStateLocal == "heat"){
 setRVents(100)
-}else {setRVents(0)}
 }
-
+if (mainStateLocal == "cool"){
+setRVents(0)
+}
+}
+}
     	def slResult = ""
        	if (mainStateLocal == "heat"){
      //   def zoneTempLocalH = zoneTempLocal
@@ -854,13 +859,18 @@ state.acactive = true
             // log.info "${state.mainMode}"
              if (state.mainMode == "heat"){
              //log.info "heat"
-             VoLocal=Math.round(((zoneTempLocal - zoneHSPLocal)+(0.1))*70)
+             setRVents(100)
+             VoLocal=Math.round(((zoneTempLocal- zoneHSPLocal)+0.2)*150)
+
                            logger(10,"info","Fan Only fan main mode heat open vents to ${VoLocal}")
 
             }
              if (state.mainMode == "cool"){
-             VoLocal=Math.round(((zoneCSPLocal - zoneTempLocal)+0.2)*150)
-                            logger(10,"info","Fan Only fan main mode heat open vents to ${VoLocal}")
+             setRVents(100)
+                          VoLocal=Math.round(((zoneTempLocal- zoneCSPLocal)+(0.1))*70)
+
+
+                            logger(10,"info","Fan Only fan main mode cool open vents to ${VoLocal}")
 
              }
                     if (VoLocal>100){
@@ -1172,17 +1182,17 @@ def setRVents(newVo){
             }
         }
         if (changeMe || isOff){
-        if (Rvents2){
+        if (Rventsenabled == true){
             logger(10,"warn","rvents true")
 
-
+        log.info("XX NewVO- [${newVo}]")
         	changeRequired = true
         	Rvents2.setLevel(newVo)
             state.Rventcheck=newVo
             runIn(60*1, Rventcheck)
             }
         }
-        log.info("setVents- [${Rvents.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
+        log.info("setVents- [${Rvent2.displayName}], changeRequired: ${changeMe}, new vo: ${newVo}, current vo: ${crntVo}")
     }
     
 
@@ -1193,7 +1203,7 @@ def setRVents(newVo){
     }
 }
 
-def Rventcheck(){
+def Rventcheck(evt){
 if (state.enabled == true){
 def newVo=state.Rventcheck
 setRVents(newVo)
