@@ -82,12 +82,12 @@ def initialize() {
 	state.mainState = state.mainState ?: getNormalizedOS(tStat.currentValue("thermostatOperatingState"))
     state.mainMode = state.mainMode ?: getNormalizedOS(tStat.currentValue("thermostatMode"))
     state.mainFan = state.mainFan ?: tStat.currentValue("thermostatFanMode")
-       if (isAC()){ state.mainCSP = state.mainCSP ?: tStat.currentValue("coolingSetpoint").toFloat()
+       if (isAC()){ state.mainCSP = state.mainCSP ?: tStat.currentValue("coolingSetpoint")?.toFloat()
     
-    }else {state.mainCSP = state.mainCSP ?: tStat.currentValue("heatingSetpoint").toFloat()
+    }else {state.mainCSP = state.mainCSP ?: tStat.currentValue("heatingSetpoint")?.toFloat()
     }
     
-    state.mainHSP = state.mainHSP ?: tStat.currentValue("heatingSetpoint").toFloat()
+    state.mainHSP = state.mainHSP ?: tStat.currentValue("heatingSetpoint")?.toFloat()
     state.mainTemp = state.mainTemp ?: tempSensors.currentValue("temperature").toFloat()
     state.voBackoff = 0
     checkNotify(null)
@@ -475,7 +475,7 @@ def checkNotify(evt){
     def mainCSPChange = false
     def mainCSP
     if (isAC()){
-		tempFloat = tStat.currentValue("coolingSetpoint").toFloat()
+		tempFloat = tStat.currentValue("coolingSetpoint")?.toFloat()
     	mainCSP = state.mainCSP
     	mainCSPChange = mainCSP != tempFloat
     	//is setback? new csp > old csp
@@ -485,7 +485,7 @@ def checkNotify(evt){
     }
 
 	//heating set point
-	tempFloat = tStat.currentValue("heatingSetpoint").toFloat()
+	tempFloat = tStat.currentValue("heatingSetpoint")?.toFloat()
     def mainHSP = state.mainHSP
     def mainHSPChange = mainHSP != tempFloat
     //is setback? new hsp < old hsp
@@ -618,8 +618,8 @@ def notifyZone(){
     def mainES = getNormalizedOSES(tStat.currentValue("equipmentStatus"))
     def mainMode = getNormalizedOS(tStat.currentValue("thermostatMode"))
     def mainCSP 
-    if (isAC()) mainCSP = tStat.currentValue("coolingSetpoint").toFloat()
-    def mainHSP = tStat.currentValue("heatingSetpoint").toFloat()
+    if (isAC()) mainCSP = tStat.currentValue("coolingSetpoint")?.toFloat()
+    def mainHSP = tStat.currentValue("heatingSetpoint")?.toFloat()
     def mainOn = mainState != "idle"
 	def dataSet = [msg:"stat",data:[initRequest:true,mainState:mainState,mainMode:mainMode,mainCSP:mainCSP,mainHSP:mainHSP,mainOn:mainOn,mainES:mainES]]
     logger(10,"debug","notifyZone:enter- map:${dataSet}")
